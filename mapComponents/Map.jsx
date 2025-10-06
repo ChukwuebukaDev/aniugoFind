@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -15,6 +15,8 @@ import TextArea from "../components/TextAreaContainer";
 import CalculateAndClearBtn from "../components/TextBtn";
 import DisplayResult from "../components/DisplayResult";
 import Points from "../components/Points";
+import DisplayMatrix from "../components/DisplayMatrix";
+import ZoomableMarker from "./MarkerComp";
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -110,14 +112,6 @@ export default function CoordinateMap() {
     setInput("");
   };
 
-  // Delete a single point
-  const deletePoint = (index) => {
-    const updated = points.filter((_, i) => i !== index);
-    setPoints(updated);
-    updateInputFromPoints(updated);
-    calculateResults(updated);
-  };
-
   // Compute distances
   const calculateResults = (pointList) => {
     if (pointList.length < 2) {
@@ -164,6 +158,7 @@ export default function CoordinateMap() {
   return (
     <div className="">
       <TextArea input={input} setInput={setInput} />
+
       {/* Calculate and Clear buttons */}
       <CalculateAndClearBtn
         handleCalculate={handleCalculate}
@@ -180,6 +175,25 @@ export default function CoordinateMap() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
           />
+          {results && (
+            <div
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+                background: "rgba(255,255,255,0.9)",
+                padding: "8px 14px",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                zIndex: 1000,
+              }}
+            >
+              Total Distance: {results.totalDistance.toFixed(2)} km
+            </div>
+          )}
+
           <MapClickHandler onAdd={handleAddPoint} />
           <FitMap markers={points} />
 
@@ -200,108 +214,35 @@ export default function CoordinateMap() {
             />
           )}
 
-          {points.map((p, idx) => (
-            <Marker key={idx} position={[p.lat, p.lng]}>
-              <Popup>
-                <strong>{p.name}</strong>
-                <br />
-                {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
-              </Popup>
-            </Marker>
-          ))}
+          {points.map((p, idx) => {
+            const isClosest =
+              results?.closestPair &&
+              results.closestPair.some(
+                ([lng, lat]) => lat === p.lat && lng === p.lng
+              );
+
+            return <ZoomableMarker key={idx} point={p} isClosest={isClosest} />;
+          })}
         </MapContainer>
       </div>
 
       {/* Points List */}
-      {points.length > 0 && (
-        <div style={{ marginTop: "20px" }}>
-          <h3>📍 Points</h3>
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            {points.map((p, i) => (
-              <li
-                key={i}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  background: "#f4f4f4",
-                  padding: "6px 10px",
-                  borderRadius: "6px",
-                  marginBottom: "5px",
-                }}
-              >
-                <span>
-                  <strong>{p.name}</strong> — {p.lat.toFixed(6)},{" "}
-                  {p.lng.toFixed(6)}
-                </span>
-                <button
-                  onClick={() => deletePoint(i)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#d32f2f",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    fontSize: "16px",
-                  }}
-                >
-                  ❌
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <Points points={points} />
+      <Points
+        points={points}
+        setPoints={setPoints}
+        updateInputFromPoints={updateInputFromPoints}
+        calculateResults={calculateResults}
+      />
+
       {/* Results Section */}
       <DisplayResult results={results} />
 
       {/* Distance Matrix */}
-      {distanceMatrix.length > 0 && (
-        <div style={{ marginTop: "30px" }}>
-          <h3>📐 Distance Matrix (km)</h3>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              textAlign: "center",
-            }}
-          >
-            <thead>
-              <tr>
-                <th></th>
-                {points.map((p, idx) => (
-                  <th key={idx}>{p.name}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {distanceMatrix.map((row, i) => (
-                <tr key={i}>
-                  <th>{points[i].name}</th>
-                  {row.map((dist, j) => (
-                    <td
-                      key={j}
-                      style={{
-                        border: "1px solid #ccc",
-                        padding: "6px",
-                        background:
-                          i === j
-                            ? "#f9f9f9"
-                            : dist === results.minDist
-                            ? "#ffd1d1"
-                            : "white",
-                      }}
-                    >
-                      {dist.toFixed(2)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DisplayMatrix
+        distanceMatrix={distanceMatrix}
+        points={points}
+        results={results}
+      />
     </div>
   );
 }

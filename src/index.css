@@ -70,3 +70,16 @@ button:focus-visible {
 .head-logo-container:hover {
   transform: scale(1.5);
 }
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.leaflet-marker-icon.bounce {
+  animation: bounce 0.8s ease-in-out infinite;
+}

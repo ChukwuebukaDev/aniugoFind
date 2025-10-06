@@ -1,4 +1,16 @@
-const Points = (points) => {
+const Points = ({
+  points,
+  setPoints,
+  updateInputFromPoints,
+  calculateResults,
+}) => {
+  // Delete a single point
+  const deletePoint = (index) => {
+    const updated = points.filter((_, i) => i !== index);
+    setPoints(updated);
+    updateInputFromPoints(updated);
+    calculateResults(updated);
+  };
   return (
     <>
       {points.length > 0 && (
