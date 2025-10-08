@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -12,7 +12,6 @@ import * as turf from "@turf/turf";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import TextArea from "../components/TextAreaContainer";
-import CalculateAndClearBtn from "../components/TextBtn";
 import DisplayResult from "../components/DisplayResult";
 import Points from "../components/Points";
 import DisplayMatrix from "../components/DisplayMatrix";
@@ -63,37 +62,6 @@ export default function CoordinateMap() {
     setPoints(newPoints);
     updateInputFromPoints(newPoints);
     calculateResults(newPoints);
-  };
-
-  // Parse manual input
-  const handleCalculate = () => {
-    try {
-      const lines = input
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-
-      const coords = lines.map((line, idx) => {
-        const parts = line.split(",");
-        if (parts.length < 2)
-          throw new Error("Invalid format: use lat, lng, name(optional)");
-        const [lat, lng, name] = parts.map((n) => n.trim());
-        const parsed = {
-          lat: parseFloat(lat),
-          lng: parseFloat(lng),
-          name: name || `Point ${idx + 1}`,
-        };
-        if (isNaN(parsed.lat) || isNaN(parsed.lng))
-          throw new Error(`Invalid coordinate: ${line}`);
-        return parsed;
-      });
-
-      setPoints(coords);
-      calculateResults(coords);
-    } catch (err) {
-      alert(err.message);
-      clearAll();
-    }
   };
 
   // Sync text input
@@ -157,13 +125,14 @@ export default function CoordinateMap() {
 
   return (
     <div className="">
-      <TextArea input={input} setInput={setInput} />
-
-      {/* Calculate and Clear buttons */}
-      <CalculateAndClearBtn
-        handleCalculate={handleCalculate}
+      <TextArea
+        input={input}
+        setInput={setInput}
+        setPoints={setPoints}
+        calculateResults={calculateResults}
         clearAll={clearAll}
       />
+
       {/* Map */}
       <div style={{ height: "500px", marginTop: "10px" }}>
         <MapContainer

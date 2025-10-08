@@ -1,4 +1,11 @@
-const TextArea = ({ input, setInput }) => {
+import CalculateAndClearBtn from "./TextBtn";
+const TextArea = ({
+  input,
+  setInput,
+  setPoints,
+  calculateResults,
+  clearAll,
+}) => {
   return (
     <div>
       <h2>🗺️ Coordinate Map with Distance Matrix</h2>
@@ -17,6 +24,14 @@ const TextArea = ({ input, setInput }) => {
           border: "1px solid #ccc",
           marginBottom: "10px",
         }}
+      />
+
+      {/* Calculate and Clear buttons */}
+      <CalculateAndClearBtn
+        input={input}
+        setPoints={setPoints}
+        calculateResults={calculateResults}
+        clearAll={clearAll}
       />
     </div>
   );

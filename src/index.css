@@ -83,3 +83,6 @@ button:focus-visible {
 .leaflet-marker-icon.bounce {
   animation: bounce 0.8s ease-in-out infinite;
 }
+.topper {
+  z-index: 10000;
+}
