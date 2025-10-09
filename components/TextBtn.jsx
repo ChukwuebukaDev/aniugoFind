@@ -1,6 +1,7 @@
 const CalculateAndClearBtn = ({
   input,
   setPoints,
+  setShowInput,
   clearAll,
   calculateResults,
 }) => {
@@ -33,6 +34,7 @@ const CalculateAndClearBtn = ({
       alert(err.message);
       clearAll();
     }
+    setShowInput((prev) => !prev);
   };
   return (
     <div className="flex justify-center items-center gap-2 absolute bottom-4 right-2">

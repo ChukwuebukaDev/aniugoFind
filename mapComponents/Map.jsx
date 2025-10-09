@@ -143,6 +143,7 @@ export default function CoordinateMap() {
             input={input}
             setInput={setInput}
             setPoints={setPoints}
+            setShowInput={setShowInput}
             calculateResults={calculateResults}
             clearAll={clearAll}
           />

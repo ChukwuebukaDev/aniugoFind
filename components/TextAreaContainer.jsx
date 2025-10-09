@@ -5,6 +5,7 @@ const TextArea = ({
   setPoints,
   calculateResults,
   clearAll,
+  setShowInput,
 }) => {
   return (
     <div className="relative">
@@ -30,6 +31,7 @@ const TextArea = ({
       <CalculateAndClearBtn
         input={input}
         setPoints={setPoints}
+        setShowInput={setShowInput}
         calculateResults={calculateResults}
         clearAll={clearAll}
       />
