@@ -35,32 +35,16 @@ const CalculateAndClearBtn = ({
     }
   };
   return (
-    <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+    <div className="flex justify-center items-center gap-2">
       <button
+        className="preset-btn bg-green-600 hover:bg-green-500"
         onClick={handleCalculate}
-        style={{
-          flex: 1,
-          padding: "10px 16px",
-          background: "#1976d2",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-        }}
       >
         Calculate
       </button>
       <button
+        className="preset-btn bg-red-600 hover:bg-red-500"
         onClick={clearAll}
-        style={{
-          flex: 1,
-          padding: "10px 16px",
-          background: "#d32f2f",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-        }}
       >
         Clear All
       </button>

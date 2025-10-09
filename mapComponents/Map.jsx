@@ -1,13 +1,5 @@
-import React, { useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Polyline,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
+import { useState, useCallback, useEffect } from "react";
+import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
 import * as turf from "@turf/turf";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -16,6 +8,10 @@ import DisplayResult from "../components/DisplayResult";
 import Points from "../components/Points";
 import DisplayMatrix from "../components/DisplayMatrix";
 import ZoomableMarker from "./MarkerComp";
+import MapClickHandler from "./MapClickHandler";
+import TextInputBtn from "../appBtnHandlers/TextInputBtn";
+import MarkerBounce from "./MarkerBounce";
+
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -25,10 +21,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Fit map to markers automatically
 function FitMap({ markers }) {
   const map = useMap();
-  React.useEffect(() => {
+  useEffect(() => {
     if (markers.length > 0) {
       const group = L.featureGroup(
         markers.map((m) => L.marker([m.lat, m.lng]))
@@ -39,32 +34,13 @@ function FitMap({ markers }) {
   return null;
 }
 
-// Handle click events on the map
-function MapClickHandler({ onAdd }) {
-  useMapEvents({
-    click(e) {
-      const name = prompt("Enter a name for this location (optional):") || "";
-      onAdd({ ...e.latlng, name: name || `Point ${Date.now()}` });
-    },
-  });
-  return null;
-}
-
 export default function CoordinateMap() {
   const [input, setInput] = useState("");
   const [points, setPoints] = useState([]);
   const [results, setResults] = useState(null);
   const [distanceMatrix, setDistanceMatrix] = useState([]);
-
-  // Add a point (from map click)
-  const handleAddPoint = (point) => {
-    const newPoints = [...points, point];
-    setPoints(newPoints);
-    updateInputFromPoints(newPoints);
-    calculateResults(newPoints);
-  };
-
-  // Sync text input
+  const [bouncingMarkers, setBouncingMarkers] = useState([]);
+  const [showInput, setShowInput] = useState(false); // 👈 new toggle state
   const updateInputFromPoints = (pointList) => {
     const newInput = pointList
       .map((p) => `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${p.name}`)
@@ -72,69 +48,109 @@ export default function CoordinateMap() {
     setInput(newInput);
   };
 
-  // Clear all
-  const clearAll = () => {
+  const handleAddPoint = (point) => {
+    const newPoints = [...points, point];
+    setPoints(newPoints);
+    updateInputFromPoints(newPoints);
+  };
+
+  const clearAll = useCallback(() => {
     setPoints([]);
     setResults(null);
     setDistanceMatrix([]);
     setInput("");
-  };
+    setBouncingMarkers([]);
+  }, []);
 
-  // Compute distances
-  const calculateResults = (pointList) => {
-    if (pointList.length < 2) {
-      setResults(null);
-      setDistanceMatrix([]);
-      return;
-    }
+  const calculateResults = useCallback(
+    (pointList) => {
+      if (pointList.length < 2) {
+        setResults(null);
+        setDistanceMatrix([]);
+        return;
+      }
 
-    const coords = pointList.map((p) => [p.lng, p.lat]);
-    const line = turf.lineString(coords);
-    const totalDistance = turf.length(line, { units: "kilometers" });
+      const coords = pointList.map((p) => [p.lng, p.lat]);
+      const line = turf.lineString(coords);
+      const totalDistance = turf.length(line, { units: "kilometers" });
 
-    let minDist = Infinity;
-    let closestPair = [];
-    const matrix = [];
+      let minDist = Infinity;
+      let closestPair = [];
+      const matrix = [];
 
-    for (let i = 0; i < coords.length; i++) {
-      const row = [];
-      for (let j = 0; j < coords.length; j++) {
-        if (i === j) {
-          row.push(0);
-        } else {
-          const dist = turf.distance(
-            turf.point(coords[i]),
-            turf.point(coords[j]),
-            {
-              units: "kilometers",
+      for (let i = 0; i < coords.length; i++) {
+        const row = [];
+        for (let j = 0; j < coords.length; j++) {
+          if (i === j) row.push(0);
+          else {
+            const dist = turf.distance(
+              turf.point(coords[i]),
+              turf.point(coords[j]),
+              { units: "kilometers" }
+            );
+            row.push(dist);
+            if (dist < minDist) {
+              minDist = dist;
+              closestPair = [coords[i], coords[j]];
             }
-          );
-          row.push(dist);
-          if (dist < minDist) {
-            minDist = dist;
-            closestPair = [coords[i], coords[j]];
           }
         }
+        matrix.push(row);
       }
-      matrix.push(row);
-    }
 
-    setResults({ totalDistance, closestPair, minDist });
-    setDistanceMatrix(matrix);
-  };
+      setResults({ totalDistance, closestPair, minDist });
+
+      const bouncing = pointList.filter((p) =>
+        closestPair.some(
+          ([lng, lat]) =>
+            Math.abs(lat - p.lat) < 1e-6 && Math.abs(lng - p.lng) < 1e-6
+        )
+      );
+      setBouncingMarkers(bouncing.map((b) => b.name));
+      setTimeout(() => setBouncingMarkers([]), 4000);
+
+      setDistanceMatrix(matrix);
+    },
+    [setResults, setDistanceMatrix]
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(() => calculateResults(points), 300);
+    return () => clearTimeout(timer);
+  }, [points, calculateResults]);
+
+  const isClosestMarker = useCallback(
+    (p) =>
+      results?.closestPair?.some(
+        ([lng, lat]) =>
+          Math.abs(lat - p.lat) < 1e-6 && Math.abs(lng - p.lng) < 1e-6
+      ),
+    [results]
+  );
 
   return (
-    <div className="">
-      <TextArea
-        input={input}
-        setInput={setInput}
-        setPoints={setPoints}
-        calculateResults={calculateResults}
-        clearAll={clearAll}
-      />
+    <div className="w-full flex flex-col">
+      <MarkerBounce />
+      <TextInputBtn showInput={showInput} setShowInput={setShowInput} />
+      {/* Collapsible TextArea with smooth transition */}
+      <div
+        className={`transition-all duration-800 overflow-hidden ${
+          showInput ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="mt-2">
+          <TextArea
+            input={input}
+            setInput={setInput}
+            setPoints={setPoints}
+            calculateResults={calculateResults}
+            clearAll={clearAll}
+          />
+        </div>
+      </div>
 
-      {/* Map */}
-      <div style={{ height: "500px", marginTop: "10px" }}>
+      {/* Map Section */}
+      <div className="relative h-[65vh] min-h-[400px] rounded-lg overflow-hidden shadow-md">
         <MapContainer
           center={[9.082, 8.6753]}
           zoom={6}
@@ -144,24 +160,6 @@ export default function CoordinateMap() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
           />
-          {results && (
-            <div
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                background: "rgba(255,255,255,0.9)",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                fontSize: "14px",
-                fontWeight: "bold",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                zIndex: 1000,
-              }}
-            >
-              Total Distance: {results.totalDistance.toFixed(2)} km
-            </div>
-          )}
 
           <MapClickHandler onAdd={handleAddPoint} />
           <FitMap markers={points} />
@@ -184,18 +182,21 @@ export default function CoordinateMap() {
           )}
 
           {points.map((p, idx) => {
-            const isClosest =
-              results?.closestPair &&
-              results.closestPair.some(
-                ([lng, lat]) => lat === p.lat && lng === p.lng
-              );
-
-            return <ZoomableMarker key={idx} point={p} isClosest={isClosest} />;
+            const isClosest = isClosestMarker(p);
+            const isBouncing = bouncingMarkers.includes(p.name);
+            return (
+              <div
+                key={idx}
+                className={`${isBouncing ? "bounce" : ""}`}
+                style={{ transformOrigin: "bottom center" }}
+              >
+                <ZoomableMarker point={p} isClosest={isClosest} />
+              </div>
+            );
           })}
         </MapContainer>
       </div>
 
-      {/* Points List */}
       <Points
         points={points}
         setPoints={setPoints}
@@ -203,10 +204,7 @@ export default function CoordinateMap() {
         calculateResults={calculateResults}
       />
 
-      {/* Results Section */}
       <DisplayResult results={results} />
-
-      {/* Distance Matrix */}
       <DisplayMatrix
         distanceMatrix={distanceMatrix}
         points={points}
