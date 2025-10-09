@@ -35,7 +35,7 @@ const CalculateAndClearBtn = ({
     }
   };
   return (
-    <div className="flex justify-center items-center gap-2">
+    <div className="flex justify-center items-center gap-2 absolute bottom-4 right-2">
       <button
         className="preset-btn bg-green-600 hover:bg-green-500"
         onClick={handleCalculate}

@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
 import * as turf from "@turf/turf";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import LocateUser from "./LocateUser";
+import LocateControl from "./LocateControl";
 import TextArea from "../components/TextAreaContainer";
 import DisplayResult from "../components/DisplayResult";
 import Points from "../components/Points";
@@ -129,16 +129,16 @@ export default function CoordinateMap() {
   );
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full h-full flex flex-col">
       <MarkerBounce />
       <TextInputBtn showInput={showInput} setShowInput={setShowInput} />
       {/* Collapsible TextArea with smooth transition */}
       <div
-        className={`transition-all duration-800 overflow-hidden ${
+        className={`transition-all duration-800  ${
           showInput ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="mt-2">
+        <div className="mb-14">
           <TextArea
             input={input}
             setInput={setInput}
@@ -150,7 +150,7 @@ export default function CoordinateMap() {
       </div>
 
       {/* Map Section */}
-      <div className="relative h-[65vh] min-h-[400px] rounded-lg overflow-hidden shadow-md">
+      <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
         <MapContainer
           center={[9.082, 8.6753]}
           zoom={6}
@@ -161,6 +161,8 @@ export default function CoordinateMap() {
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
           />
 
+          <LocateUser useMap={useMap} />
+          <LocateControl useMap={useMap} />
           <MapClickHandler onAdd={handleAddPoint} />
           <FitMap markers={points} />
 

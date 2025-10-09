@@ -7,7 +7,7 @@ const TextArea = ({
   clearAll,
 }) => {
   return (
-    <div>
+    <div className="relative">
       <h2>🗺️ Coordinate Map with Distance Matrix</h2>
       <p>
         Click the map or input coordinates manually (format: lat, lng, name)
