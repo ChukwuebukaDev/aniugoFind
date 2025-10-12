@@ -1,5 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
-import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import * as turf from "@turf/turf";
 import LocateUser from "./LocateUser";
 import LocateControl from "./LocateControl";
@@ -11,7 +17,7 @@ import ZoomableMarker from "./MarkerComp";
 import MapClickHandler from "./MapClickHandler";
 import TextInputBtn from "../appBtnHandlers/TextInputBtn";
 import MarkerBounce from "./MarkerBounce";
-
+import InfoCard from "../components/InfoCard";
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -33,8 +39,24 @@ function FitMap({ markers }) {
   }, [markers, map]);
   return null;
 }
-
+function MapWithInteraction({ onMapClick }) {
+  useMapEvents({
+    click() {
+      onMapClick();
+    },
+  });
+  return null;
+}
 export default function CoordinateMap() {
+  const [info, setInfo] = useState(false);
+
+  const handleMapClick = () => {
+    setInfo(true);
+  };
+
+  const handleClose = () => {
+    setInfo((prev) => !prev);
+  };
   const [input, setInput] = useState("");
   const [points, setPoints] = useState([]);
   const [results, setResults] = useState(null);
@@ -197,6 +219,7 @@ export default function CoordinateMap() {
               </div>
             );
           })}
+          <MapWithInteraction onMapClick={handleMapClick} />
         </MapContainer>
       </div>
 
@@ -213,6 +236,16 @@ export default function CoordinateMap() {
         points={points}
         results={results}
       />
+      {/* {showInfo && (
+        <InfoCard
+          results={results}
+          points={points}
+          onClose={() => setShowInfo(false)}
+        />
+      )} */}
+      {info && (
+        <InfoCard results={results} onClose={handleClose} points={points} />
+      )}
     </div>
   );
 }
