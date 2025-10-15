@@ -1,23 +1,17 @@
 import { useState, useCallback, useEffect } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Polyline,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
 import * as turf from "@turf/turf";
 import LocateUser from "./LocateUser";
 import LocateControl from "./LocateControl";
 import TextArea from "../components/TextAreaContainer";
-import DisplayResult from "../components/DisplayResult";
-import Points from "../components/Points";
-import DisplayMatrix from "../components/DisplayMatrix";
+import Points from "./Points";
 import ZoomableMarker from "./MarkerComp";
-import MapClickHandler from "./MapClickHandler";
-import TextInputBtn from "../appBtnHandlers/TextInputBtn";
 import MarkerBounce from "./MarkerBounce";
-import InfoCard from "../components/InfoCard";
+import InfoCard from "./InfoCard";
+import Spinner from "../components/Spinner";
+import MapClickHandler from "./MapClickHandler";
+import useDarkMode from "../Themes/useDarkMode";
+
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -39,16 +33,25 @@ function FitMap({ markers }) {
   }, [markers, map]);
   return null;
 }
-function MapWithInteraction({ onMapClick }) {
-  useMapEvents({
-    click() {
-      onMapClick();
-    },
-  });
-  return null;
-}
+
 export default function CoordinateMap() {
+  const [loading, setLoading] = useState(true);
   const [info, setInfo] = useState(false);
+  const [input, setInput] = useState("");
+  const [points, setPoints] = useState([]);
+  const [results, setResults] = useState(null);
+  const [distanceMatrix, setDistanceMatrix] = useState([]);
+  const [bouncingMarkers, setBouncingMarkers] = useState([]);
+  const [theme] = useDarkMode();
+
+  const lightUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const darkUrl =
+    "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
+
+  useEffect(() => {
+    // Simulate map or data loading
+    setTimeout(() => setLoading(false), 2000);
+  }, []);
 
   const handleMapClick = () => {
     setInfo(true);
@@ -57,12 +60,7 @@ export default function CoordinateMap() {
   const handleClose = () => {
     setInfo((prev) => !prev);
   };
-  const [input, setInput] = useState("");
-  const [points, setPoints] = useState([]);
-  const [results, setResults] = useState(null);
-  const [distanceMatrix, setDistanceMatrix] = useState([]);
-  const [bouncingMarkers, setBouncingMarkers] = useState([]);
-  const [showInput, setShowInput] = useState(false); // 👈 new toggle state
+
   const updateInputFromPoints = (pointList) => {
     const newInput = pointList
       .map((p) => `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${p.name}`)
@@ -96,10 +94,25 @@ export default function CoordinateMap() {
       const line = turf.lineString(coords);
       const totalDistance = turf.length(line, { units: "kilometers" });
 
+      // 🔹 New: Always find the closest to the *first point*
+      const first = turf.point([coords[0][0], coords[0][1]]);
       let minDist = Infinity;
-      let closestPair = [];
-      const matrix = [];
+      let closestPoint = null;
 
+      for (let i = 1; i < coords.length; i++) {
+        const current = turf.point([coords[i][0], coords[i][1]]);
+        const distance = turf.distance(first, current, { units: "kilometers" });
+
+        if (distance < minDist) {
+          minDist = distance;
+          closestPoint = coords[i];
+        }
+      }
+
+      const closestPair = [coords[0], closestPoint];
+
+      // 🔹 Build full distance matrix (for your InfoCard)
+      const matrix = [];
       for (let i = 0; i < coords.length; i++) {
         const row = [];
         for (let j = 0; j < coords.length; j++) {
@@ -111,10 +124,6 @@ export default function CoordinateMap() {
               { units: "kilometers" }
             );
             row.push(dist);
-            if (dist < minDist) {
-              minDist = dist;
-              closestPair = [coords[i], coords[j]];
-            }
           }
         }
         matrix.push(row);
@@ -122,6 +131,7 @@ export default function CoordinateMap() {
 
       setResults({ totalDistance, closestPair, minDist });
 
+      // 🔹 Marker bounce for closest pair
       const bouncing = pointList.filter((p) =>
         closestPair.some(
           ([lng, lat]) =>
@@ -151,101 +161,104 @@ export default function CoordinateMap() {
   );
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <MarkerBounce />
-      <TextInputBtn showInput={showInput} setShowInput={setShowInput} />
-      {/* Collapsible TextArea with smooth transition */}
-      <div
-        className={`transition-all duration-800  ${
-          showInput ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <div className="mb-14">
+    <>
+      <Spinner loading={loading} />
+      {!loading && (
+        <div className="w-full h-full flex flex-col">
+          <MarkerBounce />
+
           <TextArea
             input={input}
             setInput={setInput}
+            points={points}
             setPoints={setPoints}
-            setShowInput={setShowInput}
             calculateResults={calculateResults}
             clearAll={clearAll}
           />
-        </div>
-      </div>
 
-      {/* Map Section */}
-      <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
-        <MapContainer
-          center={[9.082, 8.6753]}
-          zoom={6}
-          style={{ height: "100%" }}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
-          />
+          {/* Map Section */}
+          {/* Map Section */}
+          <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
+            <MapContainer center={[9.082, 8.6753]} zoom={6} className="h-full">
+              <TileLayer
+                url={theme === "dark" ? darkUrl : lightUrl}
+                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+              />
 
-          <LocateUser useMap={useMap} />
-          <LocateControl useMap={useMap} />
-          <MapClickHandler onAdd={handleAddPoint} />
-          <FitMap markers={points} />
+              <MapClickHandler
+                handleMapClick={handleMapClick}
+                setPoints={setPoints}
+              />
+              <LocateUser />
+              <LocateControl useMap={useMap} />
+              <FitMap markers={points} />
 
-          {points.length > 1 && (
-            <Polyline
-              positions={points.map((p) => [p.lat, p.lng])}
-              pathOptions={{ color: "#1976d2", weight: 4 }}
-            />
-          )}
+              {/* Blue route polyline */}
+              {points.length > 1 && (
+                <Polyline
+                  positions={points.map((p) => [p.lat, p.lng])}
+                  pathOptions={{ color: "#1976d2", weight: 2 }}
+                />
+              )}
 
-          {results?.closestPair && (
-            <Polyline
-              positions={[
-                [results.closestPair[0][1], results.closestPair[0][0]],
-                [results.closestPair[1][1], results.closestPair[1][0]],
-              ]}
-              pathOptions={{ color: "red", weight: 5, dashArray: "5, 10" }}
-            />
-          )}
+              {/* Red dashed polyline for the closest-to-first pair */}
+              {results?.closestPair &&
+                (() => {
+                  const [start, end] = results.closestPair;
+                  const latLngPair = [
+                    [start[1], start[0]],
+                    [end[1], end[0]],
+                  ];
+                  return (
+                    <Polyline
+                      positions={latLngPair}
+                      pathOptions={{
+                        color: "red",
+                        weight: 3,
+                        dashArray: "5, 10",
+                      }}
+                    />
+                  );
+                })()}
 
-          {points.map((p, idx) => {
-            const isClosest = isClosestMarker(p);
-            const isBouncing = bouncingMarkers.includes(p.name);
-            return (
-              <div
-                key={idx}
-                className={`${isBouncing ? "bounce" : ""}`}
-                style={{ transformOrigin: "bottom center" }}
-              >
-                <ZoomableMarker point={p} isClosest={isClosest} />
+              {/* Render markers */}
+              {points.map((p, idx) => {
+                const isClosest = isClosestMarker(p);
+                const isBouncing = bouncingMarkers.includes(p.name);
+                return (
+                  <div
+                    key={idx}
+                    className={`${isBouncing ? "bounce" : ""}`}
+                    style={{ transformOrigin: "bottom center" }}
+                  >
+                    <ZoomableMarker point={p} isClosest={isClosest} />
+                  </div>
+                );
+              })}
+            </MapContainer>
+
+            {/* Distance Info Badge */}
+            {results?.minDist && (
+              <div className="absolute bottom-3 right-3 bg-white/90 text-gray-800 px-4 py-2 rounded-lg shadow-md text-sm font-medium backdrop-blur-sm transition-all duration-300">
+                Closest to first point:{" "}
+                <span className="text-blue-600 font-semibold">
+                  {results.minDist.toFixed(2)} km
+                </span>
               </div>
-            );
-          })}
-          <MapWithInteraction onMapClick={handleMapClick} />
-        </MapContainer>
-      </div>
+            )}
+          </div>
 
-      <Points
-        points={points}
-        setPoints={setPoints}
-        updateInputFromPoints={updateInputFromPoints}
-        calculateResults={calculateResults}
-      />
-
-      <DisplayResult results={results} />
-      <DisplayMatrix
-        distanceMatrix={distanceMatrix}
-        points={points}
-        results={results}
-      />
-      {/* {showInfo && (
-        <InfoCard
-          results={results}
-          points={points}
-          onClose={() => setShowInfo(false)}
-        />
-      )} */}
-      {info && (
-        <InfoCard results={results} onClose={handleClose} points={points} />
+          <Points
+            points={points}
+            setPoints={setPoints}
+            updateInputFromPoints={updateInputFromPoints}
+            calculateResults={calculateResults}
+          />
+          {info && (
+            <InfoCard results={results} onClose={handleClose} points={points} />
+          )}
+        </div>
       )}
-    </div>
+    </>
   );
 }

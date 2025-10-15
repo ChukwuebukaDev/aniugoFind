@@ -1,19 +1,21 @@
 const CalculateAndClearBtn = ({
   input,
+  points,
   setPoints,
   setShowInput,
   clearAll,
   calculateResults,
 }) => {
-  // Parse manual input
+  // 🧠 Parse manual input and merge with current location
   const handleCalculate = () => {
     try {
+      // split user input into valid lines
       const lines = input
         .split("\n")
         .map((line) => line.trim())
         .filter((line) => line.length > 0);
 
-      const coords = lines.map((line, idx) => {
+      const manualCoords = lines.map((line, idx) => {
         const parts = line.split(",");
         if (parts.length < 2)
           throw new Error("Invalid format: use lat, lng, name(optional)");
@@ -21,21 +23,33 @@ const CalculateAndClearBtn = ({
         const parsed = {
           lat: parseFloat(lat),
           lng: parseFloat(lng),
-          name: name || `Point ${idx + 1}`,
+          name: name || `Manual Point ${idx + 1}`,
         };
         if (isNaN(parsed.lat) || isNaN(parsed.lng))
           throw new Error(`Invalid coordinate: ${line}`);
         return parsed;
       });
 
-      setPoints(coords);
-      calculateResults(coords);
+      // 🧭 Always ensure current location is first if it exists
+      const currentLocation = points.length > 0 ? points[0] : null;
+      let mergedPoints = [];
+      console.log(currentLocation);
+
+      if (currentLocation) {
+        mergedPoints = [currentLocation, ...manualCoords];
+      } else {
+        mergedPoints = manualCoords;
+      }
+
+      setPoints(mergedPoints);
+      calculateResults(mergedPoints);
     } catch (err) {
       alert(err.message);
       clearAll();
     }
     setShowInput((prev) => !prev);
   };
+
   return (
     <div className="flex justify-center items-center gap-2 absolute bottom-4 right-2">
       <button

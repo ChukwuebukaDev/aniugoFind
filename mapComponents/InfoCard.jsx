@@ -60,7 +60,7 @@ const InfoCard = ({ onClose, results, points }) => {
     >
       <div className="bg-black/30 backdrop-blur-md shadow-lg  border border-gray-200 p-2 text-gray-800 font-semibold">
         <div className="flex justify-between items-center mb-3 select-none">
-          <h2 className="text-lg font-semibold">Results</h2>
+          <h2 className="text-lg font-semibold">📊 Results</h2>
           {onClose && (
             <button
               onClick={handleClose}
