@@ -13,11 +13,13 @@ export default function RoadRouting({ points }) {
   const [routes, setRoutes] = useState([]);
 
   useEffect(() => {
-    if (!points || points.length < 2) return;
+    if (!map || !points || points.length < 2) return;
 
+    let isCancelled = false;
     const tempRoutes = [];
+    const activeControls = [];
 
-    const createRoute = async (start, end) => {
+    const createRoute = (start, end) => {
       return new Promise((resolve) => {
         const control = L.Routing.control({
           waypoints: [
@@ -25,15 +27,18 @@ export default function RoadRouting({ points }) {
             L.latLng(end.lat, end.lng),
           ],
           lineOptions: { styles: [{ color: "#1976d2", weight: 3 }] },
-          createMarker: () => null, // no marker
+          createMarker: () => null,
           routeWhileDragging: false,
           addWaypoints: false,
           show: false,
           containerClassName: "hidden",
-          collapsible: false,
         }).addTo(map);
 
+        activeControls.push(control);
+
         control.on("routesfound", (e) => {
+          if (isCancelled) return;
+
           const route = e.routes[0];
           const coords = route.coordinates.map((c) => [c.lat, c.lng]);
           const midIndex = Math.floor(coords.length / 2);
@@ -44,7 +49,19 @@ export default function RoadRouting({ points }) {
             midpoint: coords[midIndex],
           });
 
-          map.removeControl(control);
+          // ✅ Only remove control if still attached to a map
+          if (control._map) {
+            map.removeControl(control);
+          }
+
+          resolve();
+        });
+
+        control.on("routingerror", () => {
+          // ✅ Handle network/routing failure gracefully
+          if (control._map) {
+            map.removeControl(control);
+          }
           resolve();
         });
       });
@@ -54,10 +71,24 @@ export default function RoadRouting({ points }) {
       for (let i = 0; i < points.length - 1; i++) {
         await createRoute(points[i], points[i + 1]);
       }
-      setRoutes([...tempRoutes]);
+      if (!isCancelled) setRoutes([...tempRoutes]);
     };
 
     createAllRoutes();
+
+    return () => {
+      isCancelled = true;
+      // ✅ Cleanup all routing controls safely
+      activeControls.forEach((control) => {
+        if (control._map) {
+          try {
+            map.removeControl(control);
+          } catch (err) {
+            console.warn("Control cleanup skipped:", err);
+          }
+        }
+      });
+    };
   }, [points, map]);
 
   return (

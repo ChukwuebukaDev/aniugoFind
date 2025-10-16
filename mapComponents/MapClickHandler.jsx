@@ -30,6 +30,10 @@ function MapClickHandler({ handleMapClick, setPoints }) {
   // ✅ Listen for map clicks (only when ready)
   useMapEvents({
     click(e) {
+      // Ignore clicks originating from DOM elements with the button class
+      const tagName = e.originalEvent?.target?.tagName?.toLowerCase();
+      if (tagName === "button" || tagName === "svg" || tagName === "path")
+        return;
       if (!locationReady) {
         console.log("⏳ Location not ready yet — click ignored");
         return;

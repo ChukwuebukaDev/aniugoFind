@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { useMap } from "react-leaflet";
+import { useMap, Marker, Circle } from "react-leaflet";
+import L from "leaflet";
 
-function LocateControl({ points, setPoints }) {
+function LocateControl() {
   const map = useMap();
   const [pulsing, setPulsing] = useState(false);
-  const [visible, setVisible] = useState(true);
+  const [userLocation, setUserLocation] = useState(null);
 
-  const handleLocate = (e) => {
-    e.stopPropagation(); // Prevent click from bubbling to the map
+  const handleLocate = () => {
     if (!navigator.geolocation) {
       alert("Geolocation not supported by your browser.");
       return;
@@ -19,17 +19,8 @@ function LocateControl({ points, setPoints }) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
+        setUserLocation([latitude, longitude]);
         map.flyTo([latitude, longitude], 13, { animate: true, duration: 2 });
-
-        // Add as a React point
-        const pointName = "You are here";
-        const exists = points.some((p) => p.name === pointName);
-        if (!exists) {
-          setPoints((prev) => [
-            ...prev,
-            { lat: latitude, lng: longitude, name: pointName },
-          ]);
-        }
       },
       (err) => {
         alert("Unable to retrieve location. Please allow location access.");
@@ -41,20 +32,26 @@ function LocateControl({ points, setPoints }) {
 
   return (
     <>
-      <style>{`
-        @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(59,130,246, 0.5); }
-          70% { box-shadow: 0 0 0 10px rgba(59,130,246, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(59,130,246, 0); }
-        }
-        .pulse { animation: pulse 1.2s ease-out; }
-      `}</style>
+      {userLocation && (
+        <>
+          <Marker
+            position={userLocation}
+            icon={L.icon({
+              iconUrl:
+                "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+            })}
+          />
+          <Circle center={userLocation} radius={100} />
+        </>
+      )}
 
       <button
         onClick={handleLocate}
-        className={`cursor-pointer fixed md:absolute top-auto md:top-4 left-auto md:left-4 bottom-5 right-5 z-[1000] rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all duration-500 ${
+        className={`cursor-pointer fixed md:absolute top-auto md:top-8 left-auto md:left-4 bottom-1/3 right-5 z-[1000] rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all duration-500 ${
           pulsing ? "pulse" : ""
-        } ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        }`}
         title="Find My Location"
       >
         <svg

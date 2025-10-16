@@ -1,16 +1,26 @@
+// 🔹 React & React Hooks
 import { useState, useCallback, useEffect } from "react";
+// 🔹 React-Leaflet Core
+import L from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
-import LocateUser from "./LocateUser";
-import LocateControl from "./LocateControl";
+// 🔹 Components – Map Logic
+import {
+  LocateUser,
+  LocateControl,
+  RoadRouting,
+  ClosestRoute,
+  MapClickHandler,
+  ZoomableMarker,
+  MarkerBounce,
+  Fitmap,
+} from "../mapComponents";
+
+// 🔹 Components – UI
 import TextArea from "../components/TextAreaContainer";
 import Points from "./Points";
-import ZoomableMarker from "./MarkerComp";
-import MarkerBounce from "./MarkerBounce";
 import Spinner from "../components/Spinner";
-import MapClickHandler from "./MapClickHandler";
+// 🔹 Hooks & Themes
 import useDarkMode from "../Themes/useDarkMode";
-import RoadRouting from "./RoadRouting";
-import ClosestRoute from "./ClosestRoute";
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -20,19 +30,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
-
-function FitMap({ markers }) {
-  const map = useMap();
-  useEffect(() => {
-    if (markers.length > 0) {
-      const group = L.featureGroup(
-        markers.map((m) => L.marker([m.lat, m.lng]))
-      );
-      map.fitBounds(group.getBounds().pad(0.3));
-    }
-  }, [markers, map]);
-  return null;
-}
 
 export default function CoordinateMap() {
   const [loading, setLoading] = useState(true);
@@ -151,7 +148,7 @@ export default function CoordinateMap() {
               className="h-full"
             >
               <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                url={theme === "dark" ? darkUrl : lightUrl}
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
 
@@ -161,7 +158,7 @@ export default function CoordinateMap() {
               />
               <LocateUser />
               <LocateControl points={points} setPoints={setPoints} />
-              <FitMap markers={points} />
+              <Fitmap useMap={useMap} markers={points} />
 
               {/* Road-following blue route */}
               {points.length > 1 && <RoadRouting points={points} />}
