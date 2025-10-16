@@ -9,10 +9,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 html {
-  transition: background-color 0.3s, color 0.3s;
-}
-body {
-  @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .preset-btn {

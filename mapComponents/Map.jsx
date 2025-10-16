@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import * as turf from "@turf/turf";
 import LocateUser from "./LocateUser";
 import LocateControl from "./LocateControl";
@@ -11,6 +11,8 @@ import InfoCard from "./InfoCard";
 import Spinner from "../components/Spinner";
 import MapClickHandler from "./MapClickHandler";
 import useDarkMode from "../Themes/useDarkMode";
+import RoadRouting from "./RoadRouting";
+import ClosestRoute from "./ClosestRoute";
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -20,6 +22,10 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
+function formatDistance(km) {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  return `${km.toFixed(2)} km`;
+}
 
 function FitMap({ markers }) {
   const map = useMap();
@@ -50,6 +56,7 @@ export default function CoordinateMap() {
 
   useEffect(() => {
     // Simulate map or data loading
+
     setTimeout(() => setLoading(false), 2000);
   }, []);
 
@@ -164,7 +171,7 @@ export default function CoordinateMap() {
     <>
       <Spinner loading={loading} />
       {!loading && (
-        <div className="w-full h-full flex flex-col">
+        <div className="w-full h-full flex flex-col transition-colors duration-500 ease-in-out bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
           <MarkerBounce />
 
           <TextArea
@@ -176,10 +183,13 @@ export default function CoordinateMap() {
             clearAll={clearAll}
           />
 
-          {/* Map Section */}
-          {/* Map Section */}
           <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
-            <MapContainer center={[9.082, 8.6753]} zoom={6} className="h-full">
+            <MapContainer
+              key={theme}
+              center={[9.082, 8.6753]}
+              zoom={6}
+              className="h-full"
+            >
               <TileLayer
                 url={theme === "dark" ? darkUrl : lightUrl}
                 attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
@@ -190,36 +200,16 @@ export default function CoordinateMap() {
                 setPoints={setPoints}
               />
               <LocateUser />
-              <LocateControl useMap={useMap} />
+              <LocateControl points={points} setPoints={setPoints} />
               <FitMap markers={points} />
 
               {/* Blue route polyline */}
               {points.length > 1 && (
-                <Polyline
-                  positions={points.map((p) => [p.lat, p.lng])}
-                  pathOptions={{ color: "#1976d2", weight: 2 }}
-                />
+                <RoadRouting results={results} points={points} />
               )}
-
-              {/* Red dashed polyline for the closest-to-first pair */}
-              {results?.closestPair &&
-                (() => {
-                  const [start, end] = results.closestPair;
-                  const latLngPair = [
-                    [start[1], start[0]],
-                    [end[1], end[0]],
-                  ];
-                  return (
-                    <Polyline
-                      positions={latLngPair}
-                      pathOptions={{
-                        color: "red",
-                        weight: 3,
-                        dashArray: "5, 10",
-                      }}
-                    />
-                  );
-                })()}
+              {results?.closestPair && (
+                <ClosestRoute closestPair={results.closestPair} />
+              )}
 
               {/* Render markers */}
               {points.map((p, idx) => {
@@ -236,16 +226,6 @@ export default function CoordinateMap() {
                 );
               })}
             </MapContainer>
-
-            {/* Distance Info Badge */}
-            {results?.minDist && (
-              <div className="absolute bottom-3 right-3 bg-white/90 text-gray-800 px-4 py-2 rounded-lg shadow-md text-sm font-medium backdrop-blur-sm transition-all duration-300">
-                Closest to first point:{" "}
-                <span className="text-blue-600 font-semibold">
-                  {results.minDist.toFixed(2)} km
-                </span>
-              </div>
-            )}
           </div>
 
           <Points
@@ -255,7 +235,12 @@ export default function CoordinateMap() {
             calculateResults={calculateResults}
           />
           {info && (
-            <InfoCard results={results} onClose={handleClose} points={points} />
+            <InfoCard
+              formatDistance={formatDistance}
+              results={results}
+              onClose={handleClose}
+              points={points}
+            />
           )}
         </div>
       )}

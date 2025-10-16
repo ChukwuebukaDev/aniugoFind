@@ -1,5 +1,4 @@
 import CoordinateMap from "../mapComponents/Map";
-import ControlPanel from "./ControlPanel";
 export default function Main() {
   const handleSearch = (query) => {
     console.log("Searching for:", query);
@@ -7,7 +6,7 @@ export default function Main() {
   };
 
   return (
-    <main className="flex-1">
+    <main className="relative flex-1">
       <CoordinateMap />
     </main>
   );

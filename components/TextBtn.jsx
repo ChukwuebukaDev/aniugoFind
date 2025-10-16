@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { ClipLoader } from "react-spinners";
+
 const CalculateAndClearBtn = ({
   input,
   points,
@@ -6,10 +9,10 @@ const CalculateAndClearBtn = ({
   clearAll,
   calculateResults,
 }) => {
-  // 🧠 Parse manual input and merge with current location
+  const [processing, setProcessing] = useState(false);
+
   const handleCalculate = () => {
     try {
-      // split user input into valid lines
       const lines = input
         .split("\n")
         .map((line) => line.trim())
@@ -30,37 +33,53 @@ const CalculateAndClearBtn = ({
         return parsed;
       });
 
-      // 🧭 Always ensure current location is first if it exists
       const currentLocation = points.length > 0 ? points[0] : null;
-      let mergedPoints = [];
-      console.log(currentLocation);
 
+      let mergedPoints = [];
       if (currentLocation) {
-        mergedPoints = [currentLocation, ...manualCoords];
+        mergedPoints = [
+          currentLocation,
+          ...manualCoords.filter(
+            (p) =>
+              p.lat !== currentLocation.lat || p.lng !== currentLocation.lng
+          ),
+        ];
       } else {
         mergedPoints = manualCoords;
       }
 
-      setPoints(mergedPoints);
-      calculateResults(mergedPoints);
+      setProcessing(true);
+
+      setTimeout(() => {
+        setPoints(mergedPoints);
+        calculateResults(mergedPoints);
+        setProcessing(false);
+        setShowInput((prev) => !prev);
+      }, 800);
     } catch (err) {
       alert(err.message);
       clearAll();
+      setProcessing(false);
     }
-    setShowInput((prev) => !prev);
   };
 
   return (
     <div className="flex justify-center items-center gap-2 absolute bottom-4 right-2">
       <button
-        className="preset-btn bg-green-600 hover:bg-green-500"
+        className="preset-btn bg-green-600 hover:bg-green-500 relative flex items-center justify-center px-4 py-2"
         onClick={handleCalculate}
+        disabled={processing}
       >
-        Calculate
+        {processing && (
+          <ClipLoader size={20} color="#ffffff" className="mr-2" />
+        )}
+        <span>{processing ? "Processing..." : "Calculate"}</span>
       </button>
+
       <button
-        className="preset-btn bg-red-600 hover:bg-red-500"
+        className="preset-btn bg-red-600 hover:bg-red-500 px-4 py-2"
         onClick={clearAll}
+        disabled={processing}
       >
         Clear All
       </button>

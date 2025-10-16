@@ -1,14 +1,17 @@
 export default function TextInputBtn({ showInput, setShowInput }) {
   return (
-    <div className="flex justify-end">
+    <div className="flex">
       {/* Toggle Button */}
 
-      <span
-        onClick={() => setShowInput((prev) => !prev)}
-        className="fixed top-30 right-2 z-[1100] rounded-md text-xs font-bold cursor-pointer shadow-md transition"
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          setShowInput((prev) => !prev);
+        }}
+        className="fixed top-1/2 ml-1.5 bg-black/30 text-shadow-white border p-1.5 z-[1100] rounded-md text-xs font-bold cursor-pointer shadow-md transition"
       >
-        {showInput ? "Hide Bar" : "click here to enter coords"}
-      </span>
+        {showInput ? "Hide Bar" : "enter coords"}
+      </button>
     </div>
   );
 }

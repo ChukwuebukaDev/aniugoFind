@@ -1,33 +1,13 @@
-import { useEffect, useState, useRef } from "react";
-// Floating circular "Find My Location" button with auto-hide
-function LocateControl({ useMap }) {
+import { useState } from "react";
+import { useMap } from "react-leaflet";
+
+function LocateControl({ points, setPoints }) {
   const map = useMap();
   const [pulsing, setPulsing] = useState(false);
   const [visible, setVisible] = useState(true);
-  const hideTimeout = useRef(null);
 
-  useEffect(() => {
-    const handleDragStart = () => {
-      setVisible(false);
-      if (hideTimeout.current) clearTimeout(hideTimeout.current);
-    };
-
-    const handleMoveEnd = () => {
-      if (hideTimeout.current) clearTimeout(hideTimeout.current);
-      hideTimeout.current = setTimeout(() => setVisible(true), 2500);
-    };
-
-    map.on("dragstart", handleDragStart);
-    map.on("moveend", handleMoveEnd);
-
-    return () => {
-      map.off("dragstart", handleDragStart);
-      map.off("moveend", handleMoveEnd);
-      if (hideTimeout.current) clearTimeout(hideTimeout.current);
-    };
-  }, [map]);
-
-  const handleLocate = () => {
+  const handleLocate = (e) => {
+    e.stopPropagation(); // Prevent click from bubbling to the map
     if (!navigator.geolocation) {
       alert("Geolocation not supported by your browser.");
       return;
@@ -39,15 +19,17 @@ function LocateControl({ useMap }) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        map.flyTo([latitude, longitude], 13, {
-          animate: true,
-          duration: 2,
-        });
+        map.flyTo([latitude, longitude], 13, { animate: true, duration: 2 });
 
-        L.marker([latitude, longitude])
-          .addTo(map)
-          .bindPopup("📍 You are here")
-          .openPopup();
+        // Add as a React point
+        const pointName = "You are here";
+        const exists = points.some((p) => p.name === pointName);
+        if (!exists) {
+          setPoints((prev) => [
+            ...prev,
+            { lat: latitude, lng: longitude, name: pointName },
+          ]);
+        }
       },
       (err) => {
         alert("Unable to retrieve location. Please allow location access.");
@@ -70,7 +52,7 @@ function LocateControl({ useMap }) {
 
       <button
         onClick={handleLocate}
-        className={`fixed md:absolute top-auto md:top-4 left-auto md:left-4 bottom-5 right-5 z-[1000] rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all duration-500 ${
+        className={`cursor-pointer fixed md:absolute top-auto md:top-4 left-auto md:left-4 bottom-5 right-5 z-[1000] rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all duration-500 ${
           pulsing ? "pulse" : ""
         } ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         title="Find My Location"

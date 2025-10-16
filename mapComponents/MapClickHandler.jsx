@@ -22,7 +22,6 @@ function MapClickHandler({ handleMapClick, setPoints }) {
       setCurrentLocation(firstPoint);
       setPoints([firstPoint]);
       setLocationReady(true); // ✅ show fade-out
-      console.log("Current location set:", firstPoint);
     };
 
     fetchLocation();
@@ -49,8 +48,6 @@ function MapClickHandler({ handleMapClick, setPoints }) {
         updatedPoints.push(clickedPoint);
         return updatedPoints;
       });
-
-      console.log("Clicked:", clickedPoint);
     },
   });
 
@@ -60,31 +57,15 @@ function MapClickHandler({ handleMapClick, setPoints }) {
       <AnimatePresence>
         {!locationReady && (
           <motion.div
+            className="absolute inset-0 bg-black/60 flex justify-center items-center flex-col topper"
             key="spinnerOverlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "rgba(0,0,0,0.4)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              flexDirection: "column",
-              zIndex: 1000,
-            }}
           >
             <ClipLoader color="#ffffff" size={60} speedMultiplier={1.2} />
-            <p
-              style={{
-                marginTop: "10px",
-                color: "#fff",
-                fontSize: "1.1rem",
-                fontWeight: "500",
-              }}
-            >
+            <p className="mt-2.5 text-white text-xs font-semibold">
               Getting your location...
             </p>
           </motion.div>
