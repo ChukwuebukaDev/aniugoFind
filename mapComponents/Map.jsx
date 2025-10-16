@@ -1,13 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
-import * as turf from "@turf/turf";
 import LocateUser from "./LocateUser";
 import LocateControl from "./LocateControl";
 import TextArea from "../components/TextAreaContainer";
 import Points from "./Points";
 import ZoomableMarker from "./MarkerComp";
 import MarkerBounce from "./MarkerBounce";
-import InfoCard from "./InfoCard";
 import Spinner from "../components/Spinner";
 import MapClickHandler from "./MapClickHandler";
 import useDarkMode from "../Themes/useDarkMode";
@@ -22,10 +20,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
-function formatDistance(km) {
-  if (km < 1) return `${Math.round(km * 1000)} m`;
-  return `${km.toFixed(2)} km`;
-}
 
 function FitMap({ markers }) {
   const map = useMap();
@@ -46,7 +40,6 @@ export default function CoordinateMap() {
   const [input, setInput] = useState("");
   const [points, setPoints] = useState([]);
   const [results, setResults] = useState(null);
-  const [distanceMatrix, setDistanceMatrix] = useState([]);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
   const [theme] = useDarkMode();
 
@@ -55,18 +48,11 @@ export default function CoordinateMap() {
     "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
 
   useEffect(() => {
-    // Simulate map or data loading
-
     setTimeout(() => setLoading(false), 2000);
   }, []);
 
-  const handleMapClick = () => {
-    setInfo(true);
-  };
-
-  const handleClose = () => {
-    setInfo((prev) => !prev);
-  };
+  const handleMapClick = () => setInfo(true);
+  const handleClose = () => setInfo((prev) => !prev);
 
   const updateInputFromPoints = (pointList) => {
     const newInput = pointList
@@ -84,7 +70,6 @@ export default function CoordinateMap() {
   const clearAll = useCallback(() => {
     setPoints([]);
     setResults(null);
-    setDistanceMatrix([]);
     setInput("");
     setBouncingMarkers([]);
   }, []);
@@ -93,79 +78,54 @@ export default function CoordinateMap() {
     (pointList) => {
       if (pointList.length < 2) {
         setResults(null);
-        setDistanceMatrix([]);
         return;
       }
 
-      const coords = pointList.map((p) => [p.lng, p.lat]);
-      const line = turf.lineString(coords);
-      const totalDistance = turf.length(line, { units: "kilometers" });
-
-      // 🔹 New: Always find the closest to the *first point*
-      const first = turf.point([coords[0][0], coords[0][1]]);
-      let minDist = Infinity;
+      // 🔹 Find closest to first point
+      const first = pointList[0];
       let closestPoint = null;
+      let minDist = Infinity;
 
-      for (let i = 1; i < coords.length; i++) {
-        const current = turf.point([coords[i][0], coords[i][1]]);
-        const distance = turf.distance(first, current, { units: "kilometers" });
-
-        if (distance < minDist) {
-          minDist = distance;
-          closestPoint = coords[i];
+      for (let i = 1; i < pointList.length; i++) {
+        const p = pointList[i];
+        const dx = first.lat - p.lat;
+        const dy = first.lng - p.lng;
+        const dist = Math.sqrt(dx * dx + dy * dy); // simple straight-line
+        if (dist < minDist) {
+          minDist = dist;
+          closestPoint = p;
         }
       }
 
-      const closestPair = [coords[0], closestPoint];
-
-      // 🔹 Build full distance matrix (for your InfoCard)
-      const matrix = [];
-      for (let i = 0; i < coords.length; i++) {
-        const row = [];
-        for (let j = 0; j < coords.length; j++) {
-          if (i === j) row.push(0);
-          else {
-            const dist = turf.distance(
-              turf.point(coords[i]),
-              turf.point(coords[j]),
-              { units: "kilometers" }
-            );
-            row.push(dist);
-          }
-        }
-        matrix.push(row);
-      }
-
-      setResults({ totalDistance, closestPair, minDist });
+      const closestPair = [first, closestPoint];
 
       // 🔹 Marker bounce for closest pair
       const bouncing = pointList.filter((p) =>
         closestPair.some(
-          ([lng, lat]) =>
-            Math.abs(lat - p.lat) < 1e-6 && Math.abs(lng - p.lng) < 1e-6
+          (c) =>
+            Math.abs(c.lat - p.lat) < 1e-6 && Math.abs(c.lng - p.lng) < 1e-6
         )
       );
       setBouncingMarkers(bouncing.map((b) => b.name));
       setTimeout(() => setBouncingMarkers([]), 4000);
 
-      setDistanceMatrix(matrix);
+      setResults({ closestPair });
     },
-    [setResults, setDistanceMatrix]
+    [setResults]
+  );
+
+  const isClosestMarker = useCallback(
+    (p) =>
+      results?.closestPair?.some(
+        (c) => Math.abs(c.lat - p.lat) < 1e-6 && Math.abs(c.lng - p.lng) < 1e-6
+      ),
+    [results]
   );
 
   useEffect(() => {
     const timer = setTimeout(() => calculateResults(points), 300);
     return () => clearTimeout(timer);
   }, [points, calculateResults]);
-
-  const isClosestMarker = useCallback(
-    (p) =>
-      results?.closestPair?.some(
-        ([lng, lat]) =>
-          Math.abs(lat - p.lat) < 1e-6 && Math.abs(lng - p.lng) < 1e-6
-      ),
-    [results]
-  );
 
   return (
     <>
@@ -191,8 +151,8 @@ export default function CoordinateMap() {
               className="h-full"
             >
               <TileLayer
-                url={theme === "dark" ? darkUrl : lightUrl}
-                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
 
               <MapClickHandler
@@ -203,10 +163,10 @@ export default function CoordinateMap() {
               <LocateControl points={points} setPoints={setPoints} />
               <FitMap markers={points} />
 
-              {/* Blue route polyline */}
-              {points.length > 1 && (
-                <RoadRouting results={results} points={points} />
-              )}
+              {/* Road-following blue route */}
+              {points.length > 1 && <RoadRouting points={points} />}
+
+              {/* Red dashed closest-to-first route */}
               {results?.closestPair && (
                 <ClosestRoute closestPair={results.closestPair} />
               )}
@@ -234,14 +194,6 @@ export default function CoordinateMap() {
             updateInputFromPoints={updateInputFromPoints}
             calculateResults={calculateResults}
           />
-          {info && (
-            <InfoCard
-              formatDistance={formatDistance}
-              results={results}
-              onClose={handleClose}
-              points={points}
-            />
-          )}
         </div>
       )}
     </>

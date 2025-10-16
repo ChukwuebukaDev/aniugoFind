@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useMap } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { useMap, Polyline, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import "leaflet-routing-machine";
 
@@ -10,35 +10,74 @@ function formatDistance(meters) {
 
 export default function RoadRouting({ points }) {
   const map = useMap();
+  const [routes, setRoutes] = useState([]);
 
   useEffect(() => {
     if (!points || points.length < 2) return;
 
-    const waypoints = points.map((p) => L.latLng(p.lat, p.lng));
+    const tempRoutes = [];
 
-    const routingControl = L.Routing.control({
-      waypoints,
-      lineOptions: {
-        styles: [{ color: "#1976d2", weight: 3 }],
-      },
-      createMarker: () => null,
-      routeWhileDragging: false,
-      addWaypoints: false,
-      show: false,
-      collapsible: false,
-      containerClassName: "hidden",
-    }).addTo(map);
+    const createRoute = async (start, end) => {
+      return new Promise((resolve) => {
+        const control = L.Routing.control({
+          waypoints: [
+            L.latLng(start.lat, start.lng),
+            L.latLng(end.lat, end.lng),
+          ],
+          lineOptions: { styles: [{ color: "#1976d2", weight: 3 }] },
+          createMarker: () => null, // no marker
+          routeWhileDragging: false,
+          addWaypoints: false,
+          show: false,
+          containerClassName: "hidden",
+          collapsible: false,
+        }).addTo(map);
 
-    routingControl.on("routesfound", function (e) {
-      const route = e.routes[0];
-      const totalDistance = route.summary.totalDistance; // in meters
-      console.log("Total distance:", formatDistance(totalDistance));
-    });
+        control.on("routesfound", (e) => {
+          const route = e.routes[0];
+          const coords = route.coordinates.map((c) => [c.lat, c.lng]);
+          const midIndex = Math.floor(coords.length / 2);
 
-    return () => {
-      map.removeControl(routingControl);
+          tempRoutes.push({
+            coordinates: coords,
+            distance: route.summary.totalDistance,
+            midpoint: coords[midIndex],
+          });
+
+          map.removeControl(control);
+          resolve();
+        });
+      });
     };
+
+    const createAllRoutes = async () => {
+      for (let i = 0; i < points.length - 1; i++) {
+        await createRoute(points[i], points[i + 1]);
+      }
+      setRoutes([...tempRoutes]);
+    };
+
+    createAllRoutes();
   }, [points, map]);
 
-  return null;
+  return (
+    <>
+      {routes.map((r, idx) => (
+        <Polyline
+          key={idx}
+          positions={r.coordinates}
+          pathOptions={{ color: "#1976d2", weight: 3 }}
+        >
+          <Tooltip
+            direction="center"
+            permanent
+            offset={[0, -10]}
+            interactive={false}
+          >
+            {formatDistance(r.distance)}
+          </Tooltip>
+        </Polyline>
+      ))}
+    </>
+  );
 }

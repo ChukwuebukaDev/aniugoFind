@@ -26,6 +26,8 @@ export default function ClosestRoute({ closestPair }) {
       routeWhileDragging: false,
       addWaypoints: false,
       show: false, // hide directions panel
+      containerClassName: "hidden",
+      collapsible: false,
     }).addTo(map);
 
     routingControl.on("routesfound", (e) => {
