@@ -1,13 +1,20 @@
 @import "tailwindcss";
-
+/* Default (light mode) */
 :root {
-  color-scheme: light dark;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Apply globally */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.7s ease, color 0.3s ease;
+}
+
 html {
   transition: background-color 0.3s ease, color 0.3s ease;
 }

@@ -42,7 +42,7 @@ export default function CoordinateMap() {
 
   const lightUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
   const darkUrl =
-    "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
+    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 2000);
@@ -123,6 +123,10 @@ export default function CoordinateMap() {
     const timer = setTimeout(() => calculateResults(points), 300);
     return () => clearTimeout(timer);
   }, [points, calculateResults]);
+  const tileUrl =
+    theme === "dark"
+      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   return (
     <>

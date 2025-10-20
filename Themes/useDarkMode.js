@@ -13,19 +13,12 @@ export default function useDarkMode() {
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-
+    document.body.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // return both theme and a toggle function
-  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+  const toggleTheme = () =>
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
   return [theme, toggleTheme];
 }

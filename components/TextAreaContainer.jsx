@@ -1,4 +1,6 @@
 import { useState } from "react";
+import extraPointBarToggler from "../utilities/helperHook";
+import AddExtraPoints from "./AddExtraPoints";
 import CalculateAndClearBtn from "./TextBtn";
 import TextInputBtn from "../appBtnHandlers/TextInputBtn";
 const TextArea = ({
@@ -9,9 +11,14 @@ const TextArea = ({
   calculateResults,
   clearAll,
 }) => {
+  const { showBar } = extraPointBarToggler();
+  console.log(showBar);
+
   const [showInput, setShowInput] = useState(false); // 👈 new toggle state
   return (
     <>
+      {/* AddExtraPoints toggle bar */}
+      {showBar && <AddExtraPoints setPoints={setPoints} />}
       <TextInputBtn
         input={input}
         showInput={showInput}
