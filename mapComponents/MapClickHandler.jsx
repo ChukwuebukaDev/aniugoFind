@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { getCurrentLocation } from "../otherScripts.js/getLocation";
 import ClipLoader from "react-spinners/ClipLoader"; // 🌀 Spinner
 import { motion, AnimatePresence } from "framer-motion"; // ✨ Animation
+import { filterSiteId } from "../utilities/siteIdFiltering";
 
 function MapClickHandler({ handleMapClick, setPoints }) {
   const [currentLocation, setCurrentLocation] = useState(null);

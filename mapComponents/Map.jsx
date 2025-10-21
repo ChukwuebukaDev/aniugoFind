@@ -17,7 +17,7 @@ import {
 
 // 🔹 Components – UI
 import TextArea from "../components/TextAreaContainer";
-import Points from "./Points";
+import PointsDisplay from "../utilities/Notifications/PointsDisplay";
 import Spinner from "../components/Spinner";
 // 🔹 Hooks & Themes
 import useDarkMode from "../Themes/useDarkMode";
@@ -143,7 +143,7 @@ export default function CoordinateMap() {
             calculateResults={calculateResults}
             clearAll={clearAll}
           />
-
+          {points.length > 1 && <PointsDisplay points={points} />}
           <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
             <MapContainer
               key={theme}
@@ -189,12 +189,12 @@ export default function CoordinateMap() {
             </MapContainer>
           </div>
 
-          <Points
+          {/* <Points
             points={points}
             setPoints={setPoints}
             updateInputFromPoints={updateInputFromPoints}
             calculateResults={calculateResults}
-          />
+          /> */}
         </div>
       )}
     </>

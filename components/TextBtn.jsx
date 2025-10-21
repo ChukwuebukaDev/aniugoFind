@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ClipLoader } from "react-spinners";
-
+import { filterSiteId } from "../utilities/siteIdFiltering";
 const CalculateAndClearBtn = ({
   input,
   points,
@@ -19,17 +19,20 @@ const CalculateAndClearBtn = ({
         .filter((line) => line.length > 0);
 
       const manualCoords = lines.map((line, idx) => {
-        const parts = line.split(",");
-        if (parts.length < 2)
-          throw new Error("Invalid format: use lat, lng, name(optional)");
-        const [lat, lng, name] = parts.map((n) => n.trim());
+        // Use the filterSiteId helper
+        const { coords, name } = filterSiteId(line);
+
+        if (!coords)
+          throw new Error(
+            `Invalid coordinate or missing operator tag: ${line}`
+          );
+
         const parsed = {
-          lat: parseFloat(lat),
-          lng: parseFloat(lng),
+          lat: coords.lat,
+          lng: coords.lng,
           name: name || `Manual Point ${idx + 1}`,
         };
-        if (isNaN(parsed.lat) || isNaN(parsed.lng))
-          throw new Error(`Invalid coordinate: ${line}`);
+
         return parsed;
       });
 
