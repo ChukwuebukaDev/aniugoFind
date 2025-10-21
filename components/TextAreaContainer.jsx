@@ -12,7 +12,6 @@ const TextArea = ({
   clearAll,
 }) => {
   const { showBar } = extraPointBarToggler();
-  console.log(showBar);
 
   const [showInput, setShowInput] = useState(false); // 👈 new toggle state
   return (
