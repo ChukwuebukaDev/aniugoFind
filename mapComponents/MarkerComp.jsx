@@ -8,9 +8,9 @@ export default function ZoomableMarker({ point, isClosest }) {
 
   const handleClick = () => {
     map.flyTo([point.lat, point.lng], 13, { animate: true, duration: 1.5 });
-    setTimeout(() => {
-      map.flyTo(map.getCenter(), 10, { animate: true, duration: 1.5 });
-    }, 5000);
+    // setTimeout(() => {
+    //   map.flyTo(map.getCenter(), 10, { animate: true, duration: 1.5 });
+    // }, 5000);
   };
 
   const icon = new L.Icon({

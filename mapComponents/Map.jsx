@@ -21,6 +21,7 @@ import PointsDisplay from "../utilities/Notifications/PointsDisplay";
 import Spinner from "../components/Spinner";
 // 🔹 Hooks & Themes
 import useDarkMode from "../Themes/useDarkMode";
+import { button } from "framer-motion/client";
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -37,6 +38,7 @@ export default function CoordinateMap() {
   const [input, setInput] = useState("");
   const [points, setPoints] = useState([]);
   const [results, setResults] = useState(null);
+  const [closePoints, setClosePoints] = useState(false);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
   const [theme] = useDarkMode();
 
@@ -49,7 +51,11 @@ export default function CoordinateMap() {
   }, []);
 
   const handleMapClick = () => setInfo(true);
-  const handleClose = () => setInfo((prev) => !prev);
+  const handleClose = () => setClosePoints((prev) => !prev);
+  const deletePoint = (index) => {
+    const newPoints = points.filter((points, i) => index !== i);
+    setPoints(newPoints);
+  };
 
   const updateInputFromPoints = (pointList) => {
     const newInput = pointList
@@ -62,6 +68,9 @@ export default function CoordinateMap() {
     const newPoints = [...points, point];
     setPoints(newPoints);
     updateInputFromPoints(newPoints);
+  };
+  const zoomToPoint = (lat, lng) => {
+    map.setView([lat, lng], 13, { animate: true });
   };
 
   const clearAll = useCallback(() => {
@@ -143,7 +152,17 @@ export default function CoordinateMap() {
             calculateResults={calculateResults}
             clearAll={clearAll}
           />
-          {points.length > 1 && <PointsDisplay points={points} />}
+          <button onClick={handleClose}>X</button>
+          {points.length > 1 && (
+            <>
+              <PointsDisplay
+                closePoints={closePoints}
+                deletePoint={deletePoint}
+                points={points}
+                zoomToPoint={zoomToPoint}
+              />
+            </>
+          )}
           <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
             <MapContainer
               key={theme}
@@ -159,6 +178,7 @@ export default function CoordinateMap() {
               <MapClickHandler
                 handleMapClick={handleMapClick}
                 setPoints={setPoints}
+                handleClose={handleClose}
               />
               <LocateUser />
               <LocateControl points={points} setPoints={setPoints} />

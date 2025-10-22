@@ -42,7 +42,6 @@ function MapClickHandler({ handleMapClick, setPoints }) {
 
       const clickedPoint = e.latlng;
       handleMapClick(); // toggle infoCard
-
       setPoints((prevPoints) => {
         const updatedPoints = [...prevPoints];
         if (updatedPoints.length === 0) {
