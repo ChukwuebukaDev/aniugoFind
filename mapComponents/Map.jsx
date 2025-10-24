@@ -38,7 +38,7 @@ export default function CoordinateMap() {
   const [input, setInput] = useState("");
   const [points, setPoints] = useState([]);
   const [results, setResults] = useState(null);
-  const [closePoints, setClosePoints] = useState(false);
+  const [closePoints, setClosePoints] = useState(true);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
   const [theme] = useDarkMode();
 
@@ -49,7 +49,9 @@ export default function CoordinateMap() {
   useEffect(() => {
     setTimeout(() => setLoading(false), 2000);
   }, []);
-
+  const handleClosePoints = () => {
+    setClosePoints((prev) => !prev);
+  };
   const handleMapClick = () => setInfo(true);
   const handleClose = () => setClosePoints((prev) => !prev);
   const deletePoint = (index) => {
@@ -70,6 +72,7 @@ export default function CoordinateMap() {
     updateInputFromPoints(newPoints);
   };
   const zoomToPoint = (lat, lng) => {
+    const map = useMap();
     map.setView([lat, lng], 13, { animate: true });
   };
 
@@ -141,9 +144,8 @@ export default function CoordinateMap() {
     <>
       <Spinner loading={loading} />
       {!loading && (
-        <div className="w-full h-full flex flex-col transition-colors duration-500 ease-in-out bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+        <div className="relative w-full h-full flex flex-col transition-colors duration-500 ease-in-out bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
           <MarkerBounce />
-
           <TextArea
             input={input}
             setInput={setInput}
@@ -152,9 +154,19 @@ export default function CoordinateMap() {
             calculateResults={calculateResults}
             clearAll={clearAll}
           />
-          <button onClick={handleClose}>X</button>
+
           {points.length > 1 && (
             <>
+              <button
+                className={`sm:text-xs absolute top-1/3 rounded-full topper px-1.5 py-1 font-bold transition-all duration-700  ${
+                  closePoints ? "bg-red-500" : "bg-green-500"
+                } cursor-pointer ${
+                  closePoints ? "hover:bg-red-400" : "hover:bg-green-400"
+                }`}
+                onClick={handleClosePoints}
+              >
+                {closePoints ? "Close Points" : "Show Points"}
+              </button>
               <PointsDisplay
                 closePoints={closePoints}
                 deletePoint={deletePoint}

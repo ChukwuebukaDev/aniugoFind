@@ -8,7 +8,6 @@ export default function PointsDisplay({
   zoomToPoint, // 👈 new prop from parent map component
 }) {
   const [confirmIndex, setConfirmIndex] = useState(null);
-
   const handleDeleteClick = (i) => {
     setConfirmIndex(i);
   };
@@ -29,7 +28,7 @@ export default function PointsDisplay({
   };
 
   return (
-    !closePoints && (
+    closePoints && (
       <div className="absolute text-white font-semibold rounded-2xl p-1.5 -translate-x-1/2 -translate-y-1/2 top-1/2 topper left-1/2 sm:w-md m-auto bg-black/70 max-h-[75vh] overflow-y-auto shadow-xl xsm">
         <h3>📍 Points</h3>
         <ul className="list-none p-0">
