@@ -2,7 +2,7 @@ import { Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useEffect, useRef } from "react";
 
-export default function ZoomableMarker({ point, isClosest }) {
+export default function ZoomableMarker({ point, isClosest, openPopup }) {
   const map = useMap();
   const markerRef = useRef();
 
@@ -22,11 +22,11 @@ export default function ZoomableMarker({ point, isClosest }) {
     popupAnchor: [0, -28],
   });
 
+  // 🔸 Bounce effect for closest markers
   useEffect(() => {
     const el = markerRef.current?.getElement();
     if (!el) return;
 
-    // Apply bounce when closest, remove after delay
     if (isClosest) {
       el.classList.add("bounce");
       const timer = setTimeout(() => el.classList.remove("bounce"), 4000);
@@ -35,6 +35,14 @@ export default function ZoomableMarker({ point, isClosest }) {
       el.classList.remove("bounce");
     }
   }, [isClosest]);
+
+  // 🔸 Automatically open popup when openPopup is true
+  useEffect(() => {
+    if (openPopup && markerRef.current) {
+      markerRef.current.openPopup();
+      map.flyTo([point.lat, point.lng], 12, { animate: true, duration: 1.2 });
+    }
+  }, [openPopup, map, point.lat, point.lng]);
 
   return (
     <Marker

@@ -14,8 +14,9 @@ import {
   MarkerBounce,
   Fitmap,
 } from "../mapComponents";
-
+import { motion } from "framer-motion";
 // 🔹 Components – UI
+import PointsToggleBtn from "../appBtnHandlers/PointsToggleBtn";
 import TextArea from "../components/TextAreaContainer";
 import PointsDisplay from "../utilities/Notifications/PointsDisplay";
 import Spinner from "../components/Spinner";
@@ -38,6 +39,7 @@ export default function CoordinateMap() {
   const [results, setResults] = useState(null);
   const [closePoints, setClosePoints] = useState(true);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
+  const [popupTarget, setPopupTarget] = useState(null);
   const [theme] = useDarkMode();
 
   const lightUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -146,6 +148,7 @@ export default function CoordinateMap() {
   const zoomToPoint = (lat, lng, name) => {
     setZoomTarget({ lat, lng });
     setBouncingMarkers([name]);
+    setPopupTarget(name);
     setTimeout(() => setBouncingMarkers([]), 2000);
 
     setTimeout(() => {
@@ -170,21 +173,16 @@ export default function CoordinateMap() {
 
           {points.length > 1 && (
             <>
-              <button
-                className={`sm:text-xs absolute top-1/3 rounded-full topper px-1.5 py-1 font-bold transition-all duration-700  ${
-                  closePoints ? "bg-red-500" : "bg-green-500"
-                } cursor-pointer ${
-                  closePoints ? "hover:bg-red-400" : "hover:bg-green-400"
-                }`}
-                onClick={handleClosePoints}
-              >
-                {closePoints ? "Close Points" : "Show Points"}
-              </button>
+              <PointsToggleBtn
+                closePoints={closePoints}
+                handleClosePoints={handleClosePoints}
+              />
               <PointsDisplay
                 closePoints={closePoints}
                 deletePoint={deletePoint}
                 points={points}
                 zoomToPoint={zoomToPoint}
+                setPopupTarget={setPopupTarget}
               />
             </>
           )}
@@ -224,7 +222,11 @@ export default function CoordinateMap() {
                     className={`${isBouncing ? "bounce" : ""}`}
                     style={{ transformOrigin: "bottom center" }}
                   >
-                    <ZoomableMarker point={p} isClosest={isClosest} />
+                    <ZoomableMarker
+                      point={p}
+                      isClosest={isClosest}
+                      openPopup={popupTarget === p.name}
+                    />
                   </div>
                 );
               })}

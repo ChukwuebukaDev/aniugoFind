@@ -19,7 +19,7 @@ export default function PointsDisplay({
 
   const handlePointClick = (p, i) => {
     if (confirmIndex !== null) return;
-    if (zoomToPoint) zoomToPoint(p.lat, p.lng);
+    if (zoomToPoint) zoomToPoint(p.lat, p.lng, p.name);
   };
 
   return (
