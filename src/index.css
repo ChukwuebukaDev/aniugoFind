@@ -19,6 +19,9 @@ html {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+button {
+  cursor: pointer;
+}
 .preset-btn {
   border-radius: 8px;
   padding: 0.2em 1.2em;
@@ -26,7 +29,6 @@ html {
   font-weight: 600;
   font-family: inherit;
   color: whitesmoke;
-  cursor: pointer;
   transition: all 0.25s ease-in;
 }
 
