@@ -2,7 +2,7 @@ import { useEffect } from "react";
 function Fitmap({ markers, useMap }) {
   const map = useMap();
   useEffect(() => {
-    if (markers.length > 0) {
+    if (markers.length > 1) {
       const group = L.featureGroup(
         markers.map((m) => L.marker([m.lat, m.lng]))
       );

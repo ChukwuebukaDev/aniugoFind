@@ -5,7 +5,7 @@ export default function PointsDisplay({
   points,
   closePoints,
   deletePoint,
-  zoomToPoint, // 👈 new prop from parent map component
+  zoomToPoint,
 }) {
   const [confirmIndex, setConfirmIndex] = useState(null);
   const handleDeleteClick = (i) => {
@@ -35,7 +35,7 @@ export default function PointsDisplay({
           {points.map((p, i) => (
             <li
               key={i}
-              onClick={() => handlePointClick(p, i)} // 👈 click = zoom to map
+              onClick={() => zoomToPoint(p.lat, p.lng, p.name)} // 👈 click = zoom to map
               className="flex justify-between items-center p-2.5 mb-1.5 hover:bg-gray-400 cursor-pointer bg-gray-500 transition-all"
               title={`Zoom to ${p.name}`}
             >

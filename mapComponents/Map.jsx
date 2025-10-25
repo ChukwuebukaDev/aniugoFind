@@ -21,7 +21,6 @@ import PointsDisplay from "../utilities/Notifications/PointsDisplay";
 import Spinner from "../components/Spinner";
 // 🔹 Hooks & Themes
 import useDarkMode from "../Themes/useDarkMode";
-import { button } from "framer-motion/client";
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -34,7 +33,6 @@ L.Icon.Default.mergeOptions({
 
 export default function CoordinateMap() {
   const [loading, setLoading] = useState(true);
-  const [info, setInfo] = useState(false);
   const [input, setInput] = useState("");
   const [points, setPoints] = useState([]);
   const [results, setResults] = useState(null);
@@ -47,15 +45,14 @@ export default function CoordinateMap() {
     "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 2000);
+    const timer = setTimeout(() => setLoading(false), 2000);
+    return () => clearTimeout(timer);
   }, []);
-  const handleClosePoints = () => {
-    setClosePoints((prev) => !prev);
-  };
-  const handleMapClick = () => setInfo(true);
-  const handleClose = () => setClosePoints((prev) => !prev);
+
+  const handleClosePoints = () => setClosePoints((prev) => !prev);
+
   const deletePoint = (index) => {
-    const newPoints = points.filter((points, i) => index !== i);
+    const newPoints = points.filter((_, i) => index !== i);
     setPoints(newPoints);
   };
 
@@ -70,10 +67,6 @@ export default function CoordinateMap() {
     const newPoints = [...points, point];
     setPoints(newPoints);
     updateInputFromPoints(newPoints);
-  };
-  const zoomToPoint = (lat, lng) => {
-    const map = useMap();
-    map.setView([lat, lng], 13, { animate: true });
   };
 
   const clearAll = useCallback(() => {
@@ -135,10 +128,30 @@ export default function CoordinateMap() {
     const timer = setTimeout(() => calculateResults(points), 300);
     return () => clearTimeout(timer);
   }, [points, calculateResults]);
-  const tileUrl =
-    theme === "dark"
-      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+  const ZoomHandler = ({ targetPoint }) => {
+    const map = useMap();
+
+    useEffect(() => {
+      if (targetPoint) {
+        map.flyTo([targetPoint.lat, targetPoint.lng], 13, { animate: true });
+      }
+    }, [targetPoint, map]);
+
+    return null;
+  };
+
+  // Keep selected point for zoom
+  const [zoomTarget, setZoomTarget] = useState(null);
+  const zoomToPoint = (lat, lng, name) => {
+    setZoomTarget({ lat, lng });
+    setBouncingMarkers([name]);
+    setTimeout(() => setBouncingMarkers([]), 2000);
+
+    setTimeout(() => {
+      setClosePoints(false);
+    }, 400);
+  };
 
   return (
     <>
@@ -175,6 +188,7 @@ export default function CoordinateMap() {
               />
             </>
           )}
+
           <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
             <MapContainer
               key={theme}
@@ -187,15 +201,11 @@ export default function CoordinateMap() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
 
-              <MapClickHandler
-                handleMapClick={handleMapClick}
-                setPoints={setPoints}
-                handleClose={handleClose}
-              />
+              <MapClickHandler setPoints={setPoints} />
               <LocateUser />
               <LocateControl points={points} setPoints={setPoints} />
               <Fitmap useMap={useMap} markers={points} />
-
+              {zoomTarget && <ZoomHandler targetPoint={zoomTarget} />}
               {/* Road-following blue route */}
               {points.length > 1 && <RoadRouting points={points} />}
 
@@ -220,13 +230,6 @@ export default function CoordinateMap() {
               })}
             </MapContainer>
           </div>
-
-          {/* <Points
-            points={points}
-            setPoints={setPoints}
-            updateInputFromPoints={updateInputFromPoints}
-            calculateResults={calculateResults}
-          /> */}
         </div>
       )}
     </>

@@ -17,13 +17,6 @@ function LocateUser() {
           animate: true,
           duration: 2,
         });
-        //setPoints([{ lat: latitude, lng: longitude }]);
-        // Optional: Add a marker for current location
-        // const userMarker = L.marker([latitude, longitude])
-        //   .addTo(map)
-        //   .bindPopup("📍 You are here")
-        //   .openPopup();
-
         return () => {
           map.removeLayer(userMarker);
         };
