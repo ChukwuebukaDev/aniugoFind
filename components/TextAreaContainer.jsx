@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import extraPointBarToggler from "../utilities/helperHook";
 import AddExtraPoints from "./AddExtraPoints";
 import CalculateAndClearBtn from "./TextBtn";
@@ -12,10 +12,15 @@ const TextArea = ({
   setPoints,
   calculateResults,
   clearAll,
+  setVisible, // 👈 new prop from parent
 }) => {
   const { showBar } = extraPointBarToggler();
   const [showInput, setShowInput] = useState(false);
-  const [theme] = useDarkMode(); // 🌗 Detect current theme
+  const [theme] = useDarkMode();
+
+  useEffect(() => {
+    setVisible(showInput);
+  }, [showInput, setVisible]);
 
   // 🎨 Define theme-based styles
   const isDark = theme === "dark";

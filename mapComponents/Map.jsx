@@ -14,6 +14,7 @@ import {
   MarkerBounce,
   Fitmap,
 } from "../mapComponents";
+import MapInteractivityController from "../utilities/MapInteractivityController";
 import { motion } from "framer-motion";
 // 🔹 Components – UI
 import PointsToggleBtn from "../appBtnHandlers/PointsToggleBtn";
@@ -40,6 +41,7 @@ export default function CoordinateMap() {
   const [closePoints, setClosePoints] = useState(true);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
   const [popupTarget, setPopupTarget] = useState(null);
+  const [isTextareaVisible, setIsTextareaVisible] = useState(false);
   const [theme] = useDarkMode();
 
   const lightUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -136,7 +138,11 @@ export default function CoordinateMap() {
 
     useEffect(() => {
       if (targetPoint) {
-        map.flyTo([targetPoint.lat, targetPoint.lng], 13, { animate: true });
+        map.flyTo([targetPoint.lat, targetPoint.lng], 15, {
+          animate: true,
+          duration: 2,
+          easeLinearity: 0.25,
+        });
       }
     }, [targetPoint, map]);
 
@@ -169,6 +175,7 @@ export default function CoordinateMap() {
             setPoints={setPoints}
             calculateResults={calculateResults}
             clearAll={clearAll}
+            setVisible={setIsTextareaVisible}
           />
 
           {points.length > 1 && (
@@ -188,49 +195,57 @@ export default function CoordinateMap() {
           )}
 
           <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
-            <MapContainer
-              key={theme}
-              center={[9.082, 8.6753]}
-              zoom={6}
-              className="h-full"
+            <div
+              className={`relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md transition-opacity duration-300 ${
+                isTextareaVisible
+                  ? "opacity-70 pointer-events-none"
+                  : "opacity-100 pointer-events-auto"
+              }`}
             >
-              <TileLayer
-                url={theme === "dark" ? darkUrl : lightUrl}
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
+              <MapContainer
+                key={theme}
+                center={[9.082, 8.6753]}
+                zoom={6}
+                className="h-full"
+              >
+                <TileLayer
+                  url={theme === "dark" ? darkUrl : lightUrl}
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <MapInteractivityController disabled={isTextareaVisible} />
+                <MapClickHandler setPoints={setPoints} />
+                <LocateUser />
+                <LocateControl points={points} setPoints={setPoints} />
+                <Fitmap useMap={useMap} markers={points} />
+                {zoomTarget && <ZoomHandler targetPoint={zoomTarget} />}
+                {/* Road-following blue route */}
+                {points.length > 1 && <RoadRouting points={points} />}
 
-              <MapClickHandler setPoints={setPoints} />
-              <LocateUser />
-              <LocateControl points={points} setPoints={setPoints} />
-              <Fitmap useMap={useMap} markers={points} />
-              {zoomTarget && <ZoomHandler targetPoint={zoomTarget} />}
-              {/* Road-following blue route */}
-              {points.length > 1 && <RoadRouting points={points} />}
+                {/* Red dashed closest-to-first route */}
+                {results?.closestPair && (
+                  <ClosestRoute closestPair={results.closestPair} />
+                )}
 
-              {/* Red dashed closest-to-first route */}
-              {results?.closestPair && (
-                <ClosestRoute closestPair={results.closestPair} />
-              )}
-
-              {/* Render markers */}
-              {points.map((p, idx) => {
-                const isClosest = isClosestMarker(p);
-                const isBouncing = bouncingMarkers.includes(p.name);
-                return (
-                  <div
-                    key={idx}
-                    className={`${isBouncing ? "bounce" : ""}`}
-                    style={{ transformOrigin: "bottom center" }}
-                  >
-                    <ZoomableMarker
-                      point={p}
-                      isClosest={isClosest}
-                      openPopup={popupTarget === p.name}
-                    />
-                  </div>
-                );
-              })}
-            </MapContainer>
+                {/* Render markers */}
+                {points.map((p, idx) => {
+                  const isClosest = isClosestMarker(p);
+                  const isBouncing = bouncingMarkers.includes(p.name);
+                  return (
+                    <div
+                      key={idx}
+                      className={`${isBouncing ? "bounce" : ""}`}
+                      style={{ transformOrigin: "bottom center" }}
+                    >
+                      <ZoomableMarker
+                        point={p}
+                        isClosest={isClosest}
+                        openPopup={popupTarget === p.name}
+                      />
+                    </div>
+                  );
+                })}
+              </MapContainer>
+            </div>
           </div>
         </div>
       )}

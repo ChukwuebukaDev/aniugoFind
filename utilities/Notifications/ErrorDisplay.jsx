@@ -15,9 +15,7 @@ export default function ErrorDisplay({
       className="min-w-[20rem] max-w-sm bg-black/70 absolute top-1/2 left-1/2 rounded-2xl p-4 text-white font-bold flex flex-col -translate-x-1/2 -translate-y-1/2 shadow-xl animate-fadeIn"
     >
       <section className="mb-4">
-        <span className="bg-green-300 text-black rounded-sm px-1.5 py-0.5">
-          Error:
-        </span>{" "}
+        <span className="bg-red-600 rounded-sm px-1.5 py-0.5">Error:</span>{" "}
         {ifMessage}
       </section>
 
