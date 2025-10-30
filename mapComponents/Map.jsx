@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 // 🔹 React-Leaflet Core
 import L from "leaflet";
+import { Menu } from "lucide-react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 // 🔹 Components – Map Logic
 import {
@@ -21,6 +22,7 @@ import PointsToggleBtn from "../appBtnHandlers/PointsToggleBtn";
 import TextArea from "../components/TextAreaContainer";
 import PointsDisplay from "../utilities/Notifications/PointsDisplay";
 import Spinner from "../components/Spinner";
+import SavedCoordinatesSidebar from "./SavedCoordinatesSidebar"; // ✅ fixed import
 // 🔹 Hooks & Themes
 import useDarkMode from "../Themes/useDarkMode";
 
@@ -34,9 +36,35 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function CoordinateMap() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [input, setInput] = useState("");
-  const [points, setPoints] = useState([]);
+  const [input, setInput] = useState(() => {
+    const stored = localStorage.getItem("activeCoordinates");
+    if (!stored) return "";
+    try {
+      const pts = JSON.parse(stored);
+      if (Array.isArray(pts) && pts.length > 0) {
+        return pts
+          .map(
+            (p) => `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${p.name || ""}`
+          )
+          .join("\n");
+      }
+    } catch {
+      return "";
+    }
+    return "";
+  });
+
+  const [points, setPoints] = useState(() => {
+    const stored = localStorage.getItem("activeCoordinates");
+    try {
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [results, setResults] = useState(null);
   const [closePoints, setClosePoints] = useState(true);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
@@ -48,10 +76,31 @@ export default function CoordinateMap() {
   const darkUrl =
     "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
+  // 🔹 Simulate loading
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  // 🔹 Restore saved points on page load
+  useEffect(() => {
+    const storedPoints = JSON.parse(localStorage.getItem("activeCoordinates"));
+    if (storedPoints && Array.isArray(storedPoints)) {
+      setPoints(storedPoints);
+      setInput(
+        storedPoints
+          .map(
+            (p) => `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${p.name || ""}`
+          )
+          .join("\n")
+      );
+    }
+  }, []);
+
+  // 🔹 Persist points to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("activeCoordinates", JSON.stringify(points));
+  }, [points]);
 
   const handleClosePoints = () => setClosePoints((prev) => !prev);
 
@@ -78,6 +127,7 @@ export default function CoordinateMap() {
     setResults(null);
     setInput("");
     setBouncingMarkers([]);
+    localStorage.removeItem("activeCoordinates"); // ✅ clear persistence
   }, []);
 
   const calculateResults = useCallback(
@@ -96,7 +146,7 @@ export default function CoordinateMap() {
         const p = pointList[i];
         const dx = first.lat - p.lat;
         const dy = first.lng - p.lng;
-        const dist = Math.sqrt(dx * dx + dy * dy); // simple straight-line
+        const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < minDist) {
           minDist = dist;
           closestPoint = p;
@@ -149,17 +199,13 @@ export default function CoordinateMap() {
     return null;
   };
 
-  // Keep selected point for zoom
   const [zoomTarget, setZoomTarget] = useState(null);
   const zoomToPoint = (lat, lng, name) => {
     setZoomTarget({ lat, lng });
     setBouncingMarkers([name]);
     setPopupTarget(name);
     setTimeout(() => setBouncingMarkers([]), 2000);
-
-    setTimeout(() => {
-      setClosePoints(false);
-    }, 400);
+    setTimeout(() => setClosePoints(false), 400);
   };
 
   return (
@@ -167,7 +213,45 @@ export default function CoordinateMap() {
       <Spinner loading={loading} />
       {!loading && (
         <div className="relative w-full h-full flex flex-col transition-colors duration-500 ease-in-out bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+          {/* 🔹 Sidebar Toggle Button */}
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="absolute top-4 left-4 z-[1100] bg-white/90 border rounded-md p-2 shadow-md hover:bg-gray-100 transition"
+            title="Saved coordinates"
+          >
+            <Menu className="w-5 h-5 text-gray-700" />
+          </button>
+
+          {/* 🔹 Saved Coordinates Sidebar */}
+          <SavedCoordinatesSidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            coordinates={points}
+            onLoadSavedSet={(savedCoords) => {
+              setPoints(savedCoords);
+              setInput(
+                savedCoords
+                  .map(
+                    (p) =>
+                      `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${
+                        p.name || ""
+                      }`
+                  )
+                  .join("\n")
+              );
+            }}
+          />
+
+          {/* 🔹 Dimmed background when sidebar open */}
+          {isSidebarOpen && (
+            <div
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999] transition-opacity"
+            />
+          )}
+
           <MarkerBounce />
+
           <TextArea
             input={input}
             setInput={setInput}
@@ -218,15 +302,11 @@ export default function CoordinateMap() {
                 <LocateControl points={points} setPoints={setPoints} />
                 <Fitmap useMap={useMap} markers={points} />
                 {zoomTarget && <ZoomHandler targetPoint={zoomTarget} />}
-                {/* Road-following blue route */}
                 {points.length > 1 && <RoadRouting points={points} />}
-
-                {/* Red dashed closest-to-first route */}
                 {results?.closestPair && (
                   <ClosestRoute closestPair={results.closestPair} />
                 )}
 
-                {/* Render markers */}
                 {points.map((p, idx) => {
                   const isClosest = isClosestMarker(p);
                   const isBouncing = bouncingMarkers.includes(p.name);
