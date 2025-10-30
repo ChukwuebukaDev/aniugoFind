@@ -24,6 +24,7 @@ export default function HeaderNav() {
         <button className="hover:text-gray-200 transition-colors">
           Settings
         </button>
+        <button>Saved</button>
       </div>
 
       {/* AddExtraPoints toggle bar */}

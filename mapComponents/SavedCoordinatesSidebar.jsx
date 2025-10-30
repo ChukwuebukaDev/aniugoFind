@@ -12,9 +12,14 @@ const SavedCoordinatesSidebar = ({
 
   // Load from localStorage on mount
   useEffect(() => {
-    const stored =
-      JSON.parse(localStorage.getItem("savedCoordinateSets")) || [];
-    setSavedSets(stored);
+    try {
+      const stored =
+        JSON.parse(localStorage.getItem("savedCoordinateSets")) || [];
+      setSavedSets(stored);
+    } catch (err) {
+      console.error("Failed to parse saved sets", err);
+      setSavedSets([]);
+    }
   }, []);
 
   // Save to localStorage whenever savedSets change
@@ -37,6 +42,7 @@ const SavedCoordinatesSidebar = ({
 
   const handleLoad = (set) => {
     onLoadSavedSet(set.coordinates);
+    localStorage.setItem("lastLoadedSet", set.name);
     onClose();
   };
 
@@ -49,7 +55,7 @@ const SavedCoordinatesSidebar = ({
 
   return (
     <div
-      className={`fixed top-0 left-0 h-full w-72 bg-white/95 shadow-2xl p-4 z-[1000] transform transition-transform duration-300 ease-in-out ${
+      className={`fixed top-0 topper left-0 h-full w-72 bg-white/95 shadow-2xl p-4 z-[1000] transform transition-transform duration-300 ease-in-out ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -73,7 +79,7 @@ const SavedCoordinatesSidebar = ({
           value={setName}
           onChange={(e) => setSetName(e.target.value)}
           placeholder="Set name..."
-          className="flex-grow border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="flex-grow border text-black rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <button
           onClick={handleSave}
