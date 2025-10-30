@@ -33,18 +33,20 @@ const CalculateAndClearBtn = ({
         .map((line) => line.trim())
         .filter((line) => line.length > 0);
 
-      const manualCoords = lines.map((line, idx) => {
-        const { coords, name } = filterSiteId(line);
-        if (!coords)
-          throw new Error(
-            `Invalid coordinate or missing operator tag: ${line}`
-          );
-        return {
-          lat: coords.lat,
-          lng: coords.lng,
-          name: name || `Manual Point ${idx + 1}`,
-        };
-      });
+      const manualCoords = lines
+        .filter((line) => !line.includes("Starting Point"))
+        .map((line, idx) => {
+          const { coords, name } = filterSiteId(line);
+          if (!coords)
+            throw new Error(
+              `Invalid coordinate or missing operator tag: ${line}`
+            );
+          return {
+            lat: coords.lat,
+            lng: coords.lng,
+            name: name || `Manual Point ${idx + 1}`,
+          };
+        });
 
       const currentLocation = points.length > 0 ? points[0] : null;
       const mergedPoints = currentLocation

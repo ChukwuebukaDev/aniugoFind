@@ -17,6 +17,7 @@ import {
 import MapInteractivityController from "../utilities/MapInteractivityController";
 import { motion } from "framer-motion";
 // 🔹 Components – UI
+
 import PointsToggleBtn from "../appBtnHandlers/PointsToggleBtn";
 import TextArea from "../components/TextAreaContainer";
 import PointsDisplay from "../utilities/Notifications/PointsDisplay";
@@ -337,6 +338,7 @@ export default function CoordinateMap() {
                 url={theme === "dark" ? darkUrl : lightUrl}
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
+
               <MapInteractivityController disabled={isTextareaVisible} />
               <MapClickHandler setPoints={setPoints} />
               <LocateUser />

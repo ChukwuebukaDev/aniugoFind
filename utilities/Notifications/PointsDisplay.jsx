@@ -34,7 +34,13 @@ export default function PointsDisplay({
           className="fixed top-1/2 left-1/2 z-[999] -translate-x-1/2 -translate-y-1/2 sm:w-md max-h-[75vh] overflow-y-auto 
                      bg-black/70 backdrop-blur-md text-white font-semibold rounded-2xl p-3 shadow-2xl border border-white/10"
         >
-          <h3 className="text-lg font-bold mb-2 text-amber-400">📍 Points</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold mb-2 text-amber-400">📍 Points</h3>
+            <span className="text-xs">
+              Site Counts:{" "}
+              {points.filter((p) => p.name !== "Starting Point").length}
+            </span>
+          </div>
           {points.length === 0 ? (
             <p className="text-sm italic opacity-70">No points added yet.</p>
           ) : (
