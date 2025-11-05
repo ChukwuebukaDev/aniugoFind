@@ -33,14 +33,26 @@ const CalculateAndClearBtn = ({
         .map((line) => line.trim())
         .filter((line) => line.length > 0);
 
+      // 🔹 Parse each line: allow both “with” and “without” site IDs
       const manualCoords = lines
-        .filter((line) => !line.includes("Starting Point"))
+        .filter((line) => !/Starting\s*Point/i.test(line))
         .map((line, idx) => {
-          const { coords, name } = filterSiteId(line);
-          if (!coords)
-            throw new Error(
-              `Invalid coordinate or missing operator tag: ${line}`
-            );
+          const parsed = filterSiteId(line);
+
+          // If filterSiteId fails, try to extract plain coordinates
+          let coords = parsed?.coords;
+          let name = parsed?.name;
+
+          if (!coords) {
+            const match = line.match(/(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)/);
+            if (match) {
+              coords = { lat: parseFloat(match[1]), lng: parseFloat(match[3]) };
+              name = `Manual Point ${idx + 1}`;
+            }
+          }
+
+          if (!coords) throw new Error(`Invalid coordinate format: "${line}"`);
+
           return {
             lat: coords.lat,
             lng: coords.lng,
@@ -48,29 +60,44 @@ const CalculateAndClearBtn = ({
           };
         });
 
+      // 🔹 Deduplicate & merge with current location
       const currentLocation = points.length > 0 ? points[0] : null;
       const mergedPoints = currentLocation
         ? [
             currentLocation,
             ...manualCoords.filter(
               (p) =>
-                p.lat !== currentLocation.lat || p.lng !== currentLocation.lng
+                !(
+                  p.lat === currentLocation.lat && p.lng === currentLocation.lng
+                )
             ),
           ]
         : manualCoords;
 
-      setProcessing(true);
+      // 🔹 Remove duplicates between manual points
+      const uniquePoints = mergedPoints.filter(
+        (point, index, self) =>
+          index ===
+          self.findIndex((p) => p.lat === point.lat && p.lng === point.lng)
+      );
 
+      // 🔹 Simulate processing + trigger map update
+      setProcessing(true);
       setTimeout(() => {
-        setPoints(mergedPoints);
-        calculateResults(mergedPoints);
+        setPoints(uniquePoints);
+        calculateResults(uniquePoints);
         setProcessing(false);
         setShowInput(false);
+        setError(null);
       }, 800);
     } catch (err) {
-      alert(err.message);
+      // 🔸 Instead of alert, show an inline error message
+      setError(err.message);
       clearAll();
       setProcessing(false);
+
+      // Auto-clear error after a few seconds
+      setTimeout(() => setError(null), 4000);
     }
   };
 

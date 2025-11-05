@@ -49,7 +49,7 @@ function LocateControl() {
 
       <button
         onClick={handleLocate}
-        className={`cursor-pointer fixed md:absolute top-auto md:top-4 left-auto bottom-6 right-5 z-[1000] rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all duration-500 ${
+        className={`cursor-pointer fixed md:absolute top-auto left-auto bottom-6 right-5 z-[1000] rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all duration-500 ${
           pulsing ? "pulse" : ""
         }`}
         title="Find My Location"

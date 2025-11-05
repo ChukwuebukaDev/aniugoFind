@@ -4,15 +4,7 @@ export function filterSiteId(fullCoords) {
   }
 
   // List of known operator tags — extend this as needed
-  const operators = [
-    "IHS",
-    "MTN",
-    "AIRTEL",
-    "GLO",
-    "9MOBILE",
-    "HUAWEI",
-    "Starting",
-  ];
+  const operators = ["IHS", "MTN", "AIRTEL", "GLO", "9MOBILE", "HUAWEI"];
 
   // Find which operator tag appears first in the string
   const foundOperator = operators.find((op) => fullCoords.includes(op));

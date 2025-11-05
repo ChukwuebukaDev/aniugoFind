@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { X } from "lucide-react";
 import extraPointBarToggler from "../utilities/helperHook";
 import AddExtraPoints from "./AddExtraPoints";
 import CalculateAndClearBtn from "./TextBtn";
@@ -12,15 +13,10 @@ const TextArea = ({
   setPoints,
   calculateResults,
   clearAll,
-  setVisible, // 👈 new prop from parent
 }) => {
   const { showBar } = extraPointBarToggler();
   const [showInput, setShowInput] = useState(false);
   const [theme] = useDarkMode();
-
-  useEffect(() => {
-    setVisible(showInput);
-  }, [showInput, setVisible]);
 
   // 🎨 Define theme-based styles
   const isDark = theme === "dark";
@@ -52,6 +48,14 @@ const TextArea = ({
           isDark ? darkStyles : lightStyles
         } p-4`}
       >
+        <button
+          className="absolute topper right-0 bottom-1 p-2 hover:bg-white/80 active:bg-white/90 bg-white rounded-2xl hover:shadow-black"
+          role="close button"
+          title="close box"
+          onClick={() => setShowInput(false)}
+        >
+          <X size={24} color="red" />
+        </button>
         <p
           className={`text-sm mb-3 tracking-wide ${
             isDark ? "text-gray-200" : "text-gray-700"

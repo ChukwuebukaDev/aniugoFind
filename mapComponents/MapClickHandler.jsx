@@ -35,7 +35,6 @@ function MapClickHandler({ setPoints }) {
           currentLocationRef.current = firstPoint;
           setPoints([firstPoint]);
           setLocationReady(true);
-          console.log("📍 Location found:", firstPoint);
         } else {
           throw new Error("Location unavailable");
         }

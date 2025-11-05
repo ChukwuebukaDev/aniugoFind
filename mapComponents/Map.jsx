@@ -45,10 +45,9 @@ export default function CoordinateMap() {
   const [closePoints, setClosePoints] = useState(true);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
   const [popupTarget, setPopupTarget] = useState(null);
-  const [isTextareaVisible, setIsTextareaVisible] = useState(false);
   const [theme] = useDarkMode();
   const [zoomTarget, setZoomTarget] = useState(null);
-
+  const [offMap, setOffMap] = useState(false);
   const lightUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
   const darkUrl =
     "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
@@ -307,7 +306,6 @@ export default function CoordinateMap() {
             setPoints={setPoints}
             calculateResults={calculateResults}
             clearAll={clearAll}
-            setVisible={setIsTextareaVisible}
           />
 
           {points.length > 1 && (
@@ -339,8 +337,7 @@ export default function CoordinateMap() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
 
-              <MapInteractivityController disabled={isTextareaVisible} />
-              <MapClickHandler setPoints={setPoints} />
+              {offMap && <MapClickHandler setPoints={setPoints} />}
               <LocateUser />
               <LocateControl points={points} setPoints={setPoints} />
               <FitmapHandler markers={points} />

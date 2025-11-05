@@ -52,9 +52,11 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
       eventHandlers={{ click: handleClick }}
     >
       <Popup>
-        <strong>{point.name}</strong>
-        <br />
-        {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
+        <div className="bg-pink-500">
+          <strong className="">{point.name}</strong>
+          <br />
+          {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
+        </div>
       </Popup>
     </Marker>
   );
