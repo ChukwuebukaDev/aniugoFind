@@ -1,23 +1,21 @@
-// 🔹 React & React Hooks
+// 🔹 React & Hooks
 import { useState, useCallback, useEffect } from "react";
-// 🔹 React-Leaflet Core
+// 🔹 React-Leaflet
 import L from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 // 🔹 Components – Map Logic
+import UserLocationMarker from "../mapComponents/UserLocationMarker";
+
 import {
-  LocateUser,
-  LocateControl,
   RoadRouting,
   ClosestRoute,
   MapClickHandler,
   ZoomableMarker,
   MarkerBounce,
-  Fitmap,
 } from "../mapComponents";
-import MapInteractivityController from "../utilities/MapInteractivityController";
+
 import { motion } from "framer-motion";
 // 🔹 Components – UI
-
 import PointsToggleBtn from "../appBtnHandlers/PointsToggleBtn";
 import TextArea from "../components/TextAreaContainer";
 import PointsDisplay from "../utilities/Notifications/PointsDisplay";
@@ -25,8 +23,9 @@ import Spinner from "../components/Spinner";
 import SavedCoordinatesSidebar from "./SavedCoordinatesSidebar";
 // 🔹 Hooks & Themes
 import useDarkMode from "../Themes/useDarkMode";
+import usePoints from "../hooks/usePoints";
 
-// Fix Leaflet marker icons
+// Fix Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -38,115 +37,49 @@ L.Icon.Default.mergeOptions({
 export default function CoordinateMap() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [restored, setRestored] = useState(false);
   const [input, setInput] = useState("");
-  const [points, setPoints] = useState([]);
   const [results, setResults] = useState(null);
   const [closePoints, setClosePoints] = useState(true);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
   const [popupTarget, setPopupTarget] = useState(null);
-  const [theme] = useDarkMode();
   const [zoomTarget, setZoomTarget] = useState(null);
   const [offMap, setOffMap] = useState(false);
+  const [theme] = useDarkMode();
+
+  const {
+    points,
+    userLocation,
+    addPoint,
+    removePoint,
+    clearPoints,
+    setAllPoints,
+  } = usePoints();
+
   const lightUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
   const darkUrl =
     "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
+  // Show spinner briefly at load
   useEffect(() => {
-    if (restored) {
-      const timer = setTimeout(() => setLoading(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [restored]);
-
-  useEffect(() => {
-    // 1. Try restoring directly active coordinates
-    const saved = localStorage.getItem("activeCoordinates");
-    const lastLoadedSet = localStorage.getItem("lastLoadedSet");
-
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setPoints(parsed);
-          setInput(
-            parsed
-              .map(
-                (p) =>
-                  `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${p.name || ""}`
-              )
-              .join("\n")
-          );
-          setTimeout(() => {
-            const event = new CustomEvent("fitToMarkers", { detail: parsed });
-            window.dispatchEvent(event);
-            setRestored(true);
-          }, 100);
-          return; // ✅ Stop here, activeCoordinates take priority
-        }
-      } catch (e) {
-        console.error("Failed to parse saved coordinates", e);
-      }
-    }
-
-    // 2. If no activeCoordinates, but a lastLoadedSet exists, load it
-    if (lastLoadedSet) {
-      const savedSets =
-        JSON.parse(localStorage.getItem("savedCoordinateSets")) || [];
-      const match = savedSets.find((s) => s.name === lastLoadedSet);
-      if (match) {
-        setPoints(match.coordinates);
-        setInput(
-          match.coordinates
-            .map(
-              (p) => `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${p.name || ""}`
-            )
-            .join("\n")
-        );
-        setTimeout(() => {
-          const event = new CustomEvent("fitToMarkers", {
-            detail: match.coordinates,
-          });
-          window.dispatchEvent(event);
-          setRestored(true);
-        }, 100);
-        return;
-      }
-    }
-
-    // If neither found
-    setRestored(true);
+    const timer = setTimeout(() => setLoading(false), 400);
+    return () => clearTimeout(timer);
   }, []);
 
-  // 🔹 Persist points to localStorage
-  useEffect(() => {
-    if (restored) {
-      localStorage.setItem("activeCoordinates", JSON.stringify(points));
-    }
-  }, [points, restored]);
-
+  // 🔹 Toggle close-points display
   const handleClosePoints = () => setClosePoints((prev) => !prev);
 
-  const deletePoint = (index) => {
-    const newPoints = points.filter((_, i) => index !== i);
-    setPoints(newPoints);
-  };
-
-  const updateInputFromPoints = (pointList) => {
-    const newInput = pointList
-      .map((p) => `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${p.name}`)
-      .join("\n");
-    setInput(newInput);
-  };
-
+  // 🔹 Clear all except user
   const clearAll = useCallback(() => {
-    setPoints([]);
+    clearPoints();
     setResults(null);
     setInput("");
     setBouncingMarkers([]);
-    localStorage.removeItem("activeCoordinates");
-  }, []);
+  }, [clearPoints]);
 
+  // 🔹 Delete point
+  const deletePoint = (index) => removePoint(index);
+
+  // 🔹 Calculate closest pair (for bounce + line)
   const calculateResults = useCallback(
     (pointList) => {
       if (pointList.length < 2) {
@@ -190,13 +123,13 @@ export default function CoordinateMap() {
     [results]
   );
 
+  // 🔹 Recalculate closest pair when points change
   useEffect(() => {
-    if (restored) {
-      const timer = setTimeout(() => calculateResults(points), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [points, calculateResults, restored]);
+    const timer = setTimeout(() => calculateResults(points), 300);
+    return () => clearTimeout(timer);
+  }, [points, calculateResults]);
 
+  // 🔹 Zoom to a specific marker
   const ZoomHandler = ({ targetPoint }) => {
     const map = useMap();
     useEffect(() => {
@@ -219,7 +152,7 @@ export default function CoordinateMap() {
     setTimeout(() => setClosePoints(false), 400);
   };
 
-  // 🔹 Internal Fitmap logic with event listener
+  // 🔹 Fit map bounds to all points
   const FitmapHandler = ({ markers }) => {
     const map = useMap();
     useEffect(() => {
@@ -241,9 +174,10 @@ export default function CoordinateMap() {
 
   return (
     <>
-      <Spinner loading={loading || !restored} />
-      {!loading && restored && (
-        <div className="relative w-full h-full flex flex-col transition-colors duration-500 ease-in-out bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+      <Spinner loading={loading} />
+      {!loading && (
+        <div className="relative w-full h-full flex flex-col bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors duration-500 ease-in-out">
+          {/* Sidebar Toggle Button */}
           <motion.button
             whileHover={{ scale: 1.08, x: isSidebarOpen ? 4 : -4 }}
             whileTap={{ scale: 0.95 }}
@@ -254,33 +188,23 @@ export default function CoordinateMap() {
             }}
             initial={{ opacity: 0, x: 10 }}
             onClick={() => setIsSidebarOpen((p) => !p)}
-            className={`fixed top-1/3  z-[1100] px-2.5 py-1.5 text-xs font-semibold 
-         backdrop-blur-sm shadow-lg border transition-all duration-500
-        ${
-          isSidebarOpen
-            ? "bg-red-600/80 border-red-400/40 right-0 rounded-l-full hover:bg-red-500/80 text-white shadow-red-300/30"
-            : "bg-emerald-600/80 border-emerald-400/40 left-0 rounded-r-full hover:bg-emerald-500/80 text-white shadow-emerald-300/30"
-        }`}
+            className={`fixed top-1/3 z-[1100] px-2.5 py-1.5 text-xs font-semibold 
+              backdrop-blur-sm shadow-lg border transition-all duration-500
+              ${
+                isSidebarOpen
+                  ? "bg-red-600/80 border-red-400/40 right-0 rounded-l-full hover:bg-red-500/80 text-white shadow-red-300/30"
+                  : "bg-emerald-600/80 border-emerald-400/40 left-0 rounded-r-full hover:bg-emerald-500/80 text-white shadow-emerald-300/30"
+              }`}
           >
             {isSidebarOpen ? "Hide saved" : "Show saved"}
           </motion.button>
+
           <SavedCoordinatesSidebar
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
             coordinates={points}
             onLoadSavedSet={(savedCoords) => {
-              setPoints(savedCoords);
-              setInput(
-                savedCoords
-                  .map(
-                    (p) =>
-                      `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}, ${
-                        p.name || ""
-                      }`
-                  )
-                  .join("\n")
-              );
-              // 👇 also auto-fit when loading saved sets
+              setAllPoints(savedCoords);
               setTimeout(() => {
                 const event = new CustomEvent("fitToMarkers", {
                   detail: savedCoords,
@@ -293,7 +217,7 @@ export default function CoordinateMap() {
           {isSidebarOpen && (
             <div
               onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999] transition-opacity"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999]"
             />
           )}
 
@@ -303,7 +227,7 @@ export default function CoordinateMap() {
             input={input}
             setInput={setInput}
             points={points}
-            setPoints={setPoints}
+            setPoints={setAllPoints}
             calculateResults={calculateResults}
             clearAll={clearAll}
           />
@@ -324,7 +248,7 @@ export default function CoordinateMap() {
             </>
           )}
 
-          {/* 🔹 Map Section */}
+          {/* Map Section */}
           <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
             <MapContainer
               key={theme}
@@ -334,25 +258,32 @@ export default function CoordinateMap() {
             >
               <TileLayer
                 url={theme === "dark" ? darkUrl : lightUrl}
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               />
 
-              {offMap && <MapClickHandler setPoints={setPoints} />}
-              <LocateUser />
-              <LocateControl points={points} setPoints={setPoints} />
-              <FitmapHandler markers={points} />
+              {offMap && <MapClickHandler setPoints={setAllPoints} />}
               {zoomTarget && <ZoomHandler targetPoint={zoomTarget} />}
+              <FitmapHandler markers={points} />
+              {userLocation && (
+                <UserLocationMarker userLocation={userLocation} />
+              )}
+
               {points.length > 1 && <RoadRouting points={points} />}
               {results?.closestPair && (
                 <ClosestRoute closestPair={results.closestPair} />
               )}
 
+              {/* Render all markers (including user) */}
               {points.map((p, idx) => {
                 const isClosest = isClosestMarker(p);
                 const isBouncing = bouncingMarkers.includes(p.name);
+                const key = p.isUser
+                  ? "user-location"
+                  : p.name || `${p.lat}-${p.lng}-${idx}`;
+
                 return (
                   <motion.div
-                    key={p.name || `${p.lat}-${p.lng}-${idx}`}
+                    key={key}
                     animate={isBouncing ? { y: [0, -12, 0] } : {}}
                     transition={{ repeat: 2, duration: 0.3 }}
                     style={{ transformOrigin: "bottom center" }}

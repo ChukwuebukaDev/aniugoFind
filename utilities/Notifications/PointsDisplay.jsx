@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmModal from "./ConfirmModal";
-import { getCurrentLocation } from "../../otherScripts.js/getLocation";
+import { getRoadDistance } from "../getRoadDistance";
 
 export default function PointsDisplay({
   points,
@@ -13,7 +13,17 @@ export default function PointsDisplay({
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [activePoint, setActivePoint] = useState({ open: false, index: null });
 
-  console.log(getCurrentLocation());
+  (async () => {
+    try {
+      const usage = await getRoadDistance(
+        { lat: 6.378487, lng: 5.578787, name: "ebuzu" },
+        { lat: 6.37836, lng: 5.57113, name: "benson" }
+      );
+      alert(usage);
+    } catch (er) {
+      console.log(er);
+    }
+  })();
 
   // --- Delete Handlers ---
   const handleDeleteClick = (point) => setConfirmPoint(point);
@@ -21,6 +31,13 @@ export default function PointsDisplay({
     if (confirmPoint) deletePoint(points.indexOf(confirmPoint));
     setConfirmPoint(null);
   };
+
+  //const handlePointDistanceCalculations = () => {
+  const userCurrentPoint = points.find((p) => p.name === "Starting point");
+  const baseCoord = [userCurrentPoint.lat, userCurrentPoint.lng];
+  console.log(baseCoord);
+
+  //}
   const handleCancelDelete = () => setConfirmPoint(null);
 
   // const calculatePointDistance = (p,i) => {
@@ -71,7 +88,7 @@ export default function PointsDisplay({
             <h3 className="text-lg font-bold text-amber-400">📍 Points</h3>
             <span className="text-xs opacity-80">
               Site Count:{" "}
-              {points.filter((p) => p.name !== "Starting Point").length}
+              {points.filter((p) => p.name !== "Starting point").length}
             </span>
           </div>
 

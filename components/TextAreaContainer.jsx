@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import extraPointBarToggler from "../utilities/helperHook";
+import extraPointBarToggler from "../hooks/helperHook";
 import AddExtraPoints from "./AddExtraPoints";
 import CalculateAndClearBtn from "./TextBtn";
 import TextInputBtn from "../appBtnHandlers/TextInputBtn";
