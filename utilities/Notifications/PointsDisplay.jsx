@@ -10,19 +10,11 @@ export default function PointsDisplay({
   zoomToPoint,
 }) {
   const [confirmPoint, setConfirmPoint] = useState(null);
-  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipVisible, setTooltipVisible] = useState(null);
   const [activePoint, setActivePoint] = useState({ open: false, index: null });
-
-  (async () => {
-    try {
-      const usage = await getRoadDistance(
-        { lat: 6.378487, lng: 5.578787, name: "ebuzu" },
-        { lat: 6.37836, lng: 5.57113, name: "benson" }
-      );
-    } catch (er) {
-      console.log(er);
-    }
-  })();
+  const [distanceResults, setDistanceResults] = useState({});
+  const [dispShow, setDispShow] = useState(null);
+  const [loadingIndex, setLoadingIndex] = useState(null);
 
   // --- Delete Handlers ---
   const handleDeleteClick = (point) => setConfirmPoint(point);
@@ -30,18 +22,60 @@ export default function PointsDisplay({
     if (confirmPoint) deletePoint(points.indexOf(confirmPoint));
     setConfirmPoint(null);
   };
-
-  //const handlePointDistanceCalculations = () => {
-  const userCurrentPoint = points.find((p) => p.name === "Starting point");
-  const baseCoord = [userCurrentPoint.lat, userCurrentPoint.lng];
-  console.log(baseCoord);
-
-  //}
   const handleCancelDelete = () => setConfirmPoint(null);
 
-  // const calculatePointDistance = (p,i) => {
-  //   const baseCoord =
-  // }
+  const handlePointDistanceCalculations = async (p, i) => {
+    if (p.name === "Starting point") return;
+    const userCurrentPoint = points.find((pt) => pt.name === "Starting point");
+    if (!userCurrentPoint) return;
+
+    const baseCoord = { lat: userCurrentPoint.lat, lng: userCurrentPoint.lng };
+    const currentCoord = { lat: p.lat, lng: p.lng };
+    const cacheKey = `${baseCoord.lat},${baseCoord.lng}_${p.lat},${p.lng}`;
+
+    // Skip if cached
+    if (distanceResults[cacheKey]) {
+      setDispShow(i);
+      return;
+    }
+
+    setLoadingIndex(i); // 🔄 Start spinner
+    try {
+      const { distance, duration } = await getRoadDistance(
+        baseCoord,
+        currentCoord
+      );
+      if (!distance && !duration) throw new Error();
+
+      setDistanceResults((prev) => ({
+        ...prev,
+        [cacheKey]: { distance, duration, name: p.name },
+      }));
+      setDispShow(i);
+    } catch (er) {
+      console.error("Error fetching distance data:", er);
+      setDistanceResults((prev) => ({
+        ...prev,
+        [cacheKey]: { error: "Failed to fetch distance data.", name: p.name },
+      }));
+      setDispShow(i);
+    } finally {
+      setLoadingIndex(null); // ✅ Stop spinner
+    }
+  };
+
+  function formatDuration(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    if (hours > 0 && minutes > 0) {
+      return `${hours} hr ${minutes} min`;
+    } else if (hours > 0) {
+      return `${hours} hr`;
+    } else {
+      return `${minutes} min`;
+    }
+  }
 
   // --- Point Zoom + Info ---
   const handlePointClick = (i) => {
@@ -103,12 +137,21 @@ export default function PointsDisplay({
             >
               {points.map((p, i) => {
                 const isActive = activePoint.open && activePoint.index === i;
+                const baseCoord = points.find(
+                  (pt) => pt.name === "Starting point"
+                );
+                const cacheKey = baseCoord
+                  ? `${baseCoord.lat},${baseCoord.lng}_${p.lat},${p.lng}`
+                  : null;
+                const result = cacheKey ? distanceResults[cacheKey] : null;
 
                 return (
                   <motion.li
                     key={i}
                     variants={itemVariants}
                     tabIndex={0}
+                    role="button"
+                    aria-expanded={isActive}
                     onClick={() => handlePointClick(i)}
                     onKeyDown={(e) => e.key === "Enter" && handlePointClick(i)}
                     whileHover={{ scale: 1.03 }}
@@ -123,7 +166,7 @@ export default function PointsDisplay({
                             ],
                             transition: {
                               duration: 1.5,
-                              repeat: Infinity,
+                              repeat: 3,
                               repeatType: "loop",
                             },
                           }
@@ -145,19 +188,21 @@ export default function PointsDisplay({
                         </span>
                       </div>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(p);
-                        }}
-                        className="bg-transparent font-bold text-amber-200 text-xl hover:scale-125 transition-transform"
-                        title={`Delete ${p.name}`}
-                      >
-                        ❌
-                      </button>
+                      {p.name !== "Starting point" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(p);
+                          }}
+                          className="bg-transparent font-bold text-amber-200 text-xl hover:scale-125 transition-transform"
+                          title={`Delete ${p.name}`}
+                        >
+                          ❌
+                        </button>
+                      )}
                     </div>
 
-                    {/* Zoom + Tooltip Section */}
+                    {/* Active Panel */}
                     <AnimatePresence>
                       {isActive && (
                         <motion.div
@@ -191,9 +236,9 @@ export default function PointsDisplay({
                             </button>
                           </div>
 
-                          {/* Tooltip Button */}
+                          {/* Tooltip + Distance Button */}
                           <div className="relative w-full mt-2">
-                            {tooltipVisible && (
+                            {tooltipVisible === i && (
                               <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -207,12 +252,48 @@ export default function PointsDisplay({
                                 position.
                               </motion.div>
                             )}
+
                             <button
-                              className="bg-yellow-700 p-1 font-semibold w-full rounded-xl"
-                              onMouseEnter={() => setTooltipVisible(true)}
-                              onMouseLeave={() => setTooltipVisible(false)}
+                              disabled={loadingIndex === i}
+                              className={`relative flex justify-center items-center bg-yellow-700 p-1 font-semibold w-full rounded-xl transition-all
+      ${
+        loadingIndex === i
+          ? "opacity-60 cursor-not-allowed"
+          : "hover:bg-yellow-600"
+      }`}
+                              onMouseEnter={() => setTooltipVisible(i)}
+                              onMouseLeave={() => setTooltipVisible(null)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePointDistanceCalculations(p, i);
+                              }}
                             >
-                              Calculate Distance to {p.name}
+                              {loadingIndex === i ? (
+                                // 🔄 Spinner while calculating
+                                <motion.div
+                                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                                  initial={{ rotate: 0 }}
+                                  animate={{ rotate: 360 }}
+                                  transition={{
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    duration: 0.8,
+                                  }}
+                                />
+                              ) : result && !result.error ? (
+                                // ✅ Show distance summary on button after success
+                                <span className="text-sm text-green-200 font-semibold">
+                                  {result.distance > 1000
+                                    ? `${(result.distance / 1000).toFixed(
+                                        1
+                                      )} km`
+                                    : `${result.distance} m`}{" "}
+                                  ({formatDuration(result.duration)})
+                                </span>
+                              ) : (
+                                // 🧭 Default label before any calculation
+                                <>Calculate Distance to {p.name}</>
+                              )}
                             </button>
                           </div>
                         </motion.div>

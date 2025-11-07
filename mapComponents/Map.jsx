@@ -7,8 +7,6 @@ import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import UserLocationMarker from "../mapComponents/UserLocationMarker";
 
 import {
-  RoadRouting,
-  ClosestRoute,
   MapClickHandler,
   ZoomableMarker,
   MarkerBounce,
@@ -268,10 +266,10 @@ export default function CoordinateMap() {
                 <UserLocationMarker userLocation={userLocation} />
               )}
 
-              {points.length > 1 && <RoadRouting points={points} />}
+              {/* {points.length > 1 && <RoadRouting points={points} />}
               {results?.closestPair && (
                 <ClosestRoute closestPair={results.closestPair} />
-              )}
+              )} */}
 
               {/* Render all markers (including user) */}
               {points.map((p, idx) => {
