@@ -19,7 +19,6 @@ export default function PointsDisplay({
         { lat: 6.378487, lng: 5.578787, name: "ebuzu" },
         { lat: 6.37836, lng: 5.57113, name: "benson" }
       );
-      alert(usage);
     } catch (er) {
       console.log(er);
     }
