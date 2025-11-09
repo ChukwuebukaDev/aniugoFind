@@ -19,8 +19,14 @@ export default function UserLocationMarker({ userLocation }) {
   const map = useMap();
 
   useEffect(() => {
-    if (userLocation) {
-      map.flyTo([userLocation.lat, userLocation.lng], 12, {
+    if (!userLocation) return;
+
+    const currentCenter = map.getCenter();
+    const target = L.latLng(userLocation.lat, userLocation.lng);
+
+    // Only fly if user moved significantly (>50m or so)
+    if (currentCenter.distanceTo(target) > 50) {
+      map.flyTo(target, 12, {
         animate: true,
         duration: 1.2,
       });

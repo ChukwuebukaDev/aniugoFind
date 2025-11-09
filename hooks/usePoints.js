@@ -9,21 +9,20 @@ export default function usePoints() {
   const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
-    let watchId;
-
     if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(
+      navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
           const userPoint = {
             lat: latitude,
-            name: "Starting point",
             lng: longitude,
+            name: "Starting point",
             isUser: true,
           };
+
           setUserLocation(userPoint);
 
-          // Ensure user location is first in points and stays updated
+          // Ensure user location is first
           setPoints((prev) => {
             const others = prev.filter((p) => !p.isUser);
             return [userPoint, ...others];
@@ -34,16 +33,10 @@ export default function usePoints() {
         },
         {
           enableHighAccuracy: true,
-          maximumAge: 10000, // reuse location for up to 10s
           timeout: 15000,
         }
       );
     }
-
-    // Cleanup watcher when unmounted
-    return () => {
-      if (watchId) navigator.geolocation.clearWatch(watchId);
-    };
   }, []);
 
   // Sync points with localStorage
@@ -51,39 +44,35 @@ export default function usePoints() {
     localStorage.setItem("aniugo_points", JSON.stringify(points));
   }, [points]);
 
-  // Add a new coordinate (never duplicates user location)
   const addPoint = (lat, lng) => {
-    setPoints((prev) => [...prev, { lat, lng }]);
-  };
-
-  // Remove coordinate (user location can’t be removed)
-  const removePoint = (index) => {
     setPoints((prev) => {
-      const filtered = prev.filter((_, i) => i !== index && !prev[i].isUser);
-      if (userLocation) {
-        return [userLocation, ...filtered];
-      }
-      return filtered;
+      const exists = prev.some((p) => p.lat === lat && p.lng === lng);
+      if (exists) return prev;
+      return [...prev, { lat, lng }];
     });
   };
 
-  // Clear all except user location
-  const clearPoints = () => {
-    if (userLocation) {
-      setPoints([userLocation]);
-    } else {
-      setPoints([]);
-    }
+  const removePoint = (index) => {
+    setPoints((prev) => {
+      const filtered = prev.filter((_, i) => i !== index && !prev[i].isUser);
+      const user = prev.find((p) => p.isUser);
+      return user ? [user, ...filtered] : filtered;
+    });
   };
 
-  // Replace all points (ensure user location stays first)
+  const clearPoints = () => {
+    setPoints((prev) => {
+      const user = prev.find((p) => p.isUser);
+      return user ? [user] : [];
+    });
+  };
+
   const setAllPoints = (newPoints) => {
-    if (userLocation) {
+    setPoints((prev) => {
+      const user = prev.find((p) => p.isUser);
       const filtered = newPoints.filter((p) => !p.isUser);
-      setPoints([userLocation, ...filtered]);
-    } else {
-      setPoints(newPoints);
-    }
+      return user ? [user, ...filtered] : filtered;
+    });
   };
 
   return {

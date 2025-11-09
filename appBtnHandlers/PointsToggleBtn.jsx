@@ -12,7 +12,7 @@ export default function PointsToggleBtn({ closePoints, handleClosePoints }) {
       }}
       initial={{ opacity: 0, x: 10 }}
       onClick={handleClosePoints}
-      className={`fixed top-1/3 right-0 z-[1100] px-2.5 py-1.5 text-xs font-semibold 
+      className={`fixed toppest top-1/3 right-0 z-[1100] px-2.5 py-1.5 text-xs font-semibold 
         rounded-l-full backdrop-blur-sm shadow-lg border transition-all duration-500
         ${
           closePoints

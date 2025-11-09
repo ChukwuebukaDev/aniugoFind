@@ -113,7 +113,7 @@ export default function PointsDisplay({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.95 }}
           transition={{ duration: 0.45, ease: "easeInOut" }}
-          className="fixed top-1/2 left-1/2 z-[999] -translate-x-1/2 -translate-y-1/2 w-[90vw] sm:max-w-md max-h-[75vh] overflow-y-auto 
+          className="fixed top-1/2 left-1/2 z-[999] -translate-x-1/2 topper -translate-y-1/2 w-[90vw] sm:max-w-md max-h-[75vh] overflow-y-auto 
                      bg-black/70 backdrop-blur-md text-white font-semibold rounded-2xl p-4 shadow-2xl border border-white/10"
         >
           {/* Header */}

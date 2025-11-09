@@ -44,6 +44,7 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
   useEffect(() => {
     if (openPopup && markerRef.current) {
       markerRef.current.openPopup();
+      map.flyTo([point.lat, point.lng], 12, { animate: true, duration: 1.5 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openPopup]);

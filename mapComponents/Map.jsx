@@ -127,45 +127,41 @@ export default function CoordinateMap() {
     return () => clearTimeout(timer);
   }, [points, calculateResults]);
 
-  // 🔹 Zoom to a specific marker
-  const ZoomHandler = ({ targetPoint }) => {
-    const map = useMap();
-    useEffect(() => {
-      if (targetPoint) {
-        map.flyTo([targetPoint.lat, targetPoint.lng], 15, {
-          animate: true,
-          duration: 2,
-          easeLinearity: 0.25,
-        });
-      }
-    }, [targetPoint, map]);
-    return null;
-  };
-
   const zoomToPoint = (lat, lng, name) => {
-    setZoomTarget({ lat, lng });
-    setBouncingMarkers([name]);
+    const map = L.DomUtil.get(map); // not correct—so instead:
     setPopupTarget(name);
+    setBouncingMarkers([name]);
     setTimeout(() => setBouncingMarkers([]), 2000);
     setTimeout(() => setClosePoints(false), 400);
+
+    // 🔸 Dispatch a custom event the marker can handle
+    const event = new CustomEvent("zoomToMarker", { detail: { lat, lng } });
+    window.dispatchEvent(event);
   };
 
   // 🔹 Fit map bounds to all points
   const FitmapHandler = ({ markers }) => {
     const map = useMap();
+
     useEffect(() => {
-      const fit = (list) => {
+      if (!markers || markers.length === 0) return;
+
+      // Fit only once when the map first mounts or when markers length changes
+      const bounds = L.latLngBounds(markers.map((p) => [p.lat, p.lng]));
+      map.fitBounds(bounds, { padding: [60, 60] });
+    }, [map, markers.length]); //  only when count changes, not full list
+
+    // Still allow manual "fitToMarkers" events
+    useEffect(() => {
+      const handleRestoreFit = (e) => {
+        const list = e.detail;
         if (!list || list.length === 0) return;
         const bounds = L.latLngBounds(list.map((p) => [p.lat, p.lng]));
         map.fitBounds(bounds, { padding: [60, 60] });
       };
-
-      fit(markers);
-
-      const handleRestoreFit = (e) => fit(e.detail);
       window.addEventListener("fitToMarkers", handleRestoreFit);
       return () => window.removeEventListener("fitToMarkers", handleRestoreFit);
-    }, [map, markers]);
+    }, [map]);
 
     return null;
   };
@@ -260,16 +256,11 @@ export default function CoordinateMap() {
               />
 
               {offMap && <MapClickHandler setPoints={setAllPoints} />}
-              {zoomTarget && <ZoomHandler targetPoint={zoomTarget} />}
+
               <FitmapHandler markers={points} />
               {userLocation && (
                 <UserLocationMarker userLocation={userLocation} />
               )}
-
-              {/* {points.length > 1 && <RoadRouting points={points} />}
-              {results?.closestPair && (
-                <ClosestRoute closestPair={results.closestPair} />
-              )} */}
 
               {/* Render all markers (including user) */}
               {points.map((p, idx) => {
