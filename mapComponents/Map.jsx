@@ -1,5 +1,5 @@
 // 🔹 React & Hooks
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 // 🔹 React-Leaflet
 import L from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
@@ -12,16 +12,18 @@ import {
   MarkerBounce,
 } from "../mapComponents";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 // 🔹 Components – UI
 import PointsToggleBtn from "../appBtnHandlers/PointsToggleBtn";
 import TextArea from "../components/TextAreaContainer";
 import PointsDisplay from "../utilities/Notifications/PointsDisplay";
 import Spinner from "../components/Spinner";
+import ExcelCoordinateImporter from "../components/Importer";
 import SavedCoordinatesSidebar from "./SavedCoordinatesSidebar";
 // 🔹 Hooks & Themes
 import useDarkMode from "../Themes/useDarkMode";
 import usePoints from "../hooks/usePoints";
+import { div } from "framer-motion/client";
 
 // Fix Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -42,8 +44,11 @@ export default function CoordinateMap() {
   const [popupTarget, setPopupTarget] = useState(null);
   const [zoomTarget, setZoomTarget] = useState(null);
   const [offMap, setOffMap] = useState(false);
-  const [theme] = useDarkMode();
+  const [showImporter, setShowImporter] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
 
+  const [theme] = useDarkMode();
+  const mapRef = useRef();
   const {
     points,
     userLocation,
@@ -128,13 +133,24 @@ export default function CoordinateMap() {
   }, [points, calculateResults]);
 
   const zoomToPoint = (lat, lng, name) => {
-    const map = L.DomUtil.get(map); // not correct—so instead:
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Highlight and focus the selected marker
     setPopupTarget(name);
     setBouncingMarkers([name]);
+
+    // Reset animations & close panel after a short delay
     setTimeout(() => setBouncingMarkers([]), 2000);
     setTimeout(() => setClosePoints(false), 400);
 
-    // 🔸 Dispatch a custom event the marker can handle
+    // Smooth zoom to the selected marker
+    map.flyTo([lat, lng], 12, {
+      animate: true,
+      duration: 1.2,
+    });
+
+    // Optional: trigger marker event for custom behaviors
     const event = new CustomEvent("zoomToMarker", { detail: { lat, lng } });
     window.dispatchEvent(event);
   };
@@ -216,7 +232,58 @@ export default function CoordinateMap() {
           )}
 
           <MarkerBounce />
+          <div className="relative z-[1000] flex flex-col items-end">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowImporter((prev) => !prev)}
+              className="bg-emerald-600/80 text-white  shadow-emerald-300/30 fixed toppest top-2/3 left-0 z-[1100] px-2.5 py-1.5 text-xs font-semibold 
+        rounded-r-full backdrop-blur-sm shadow-lg transition-all duration-500"
+            >
+              {importLoading && (
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
+                </svg>
+              )}
+              {showImporter ? "Hide Importer" : "Import Excel"}
+            </motion.button>
 
+            <AnimatePresence>
+              {showImporter && (
+                <motion.div
+                  key="excel-importer"
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[90%] sm:w-[70%]"
+                >
+                  <ExcelCoordinateImporter
+                    onImport={setAllPoints}
+                    setShowImporter={setShowImporter}
+                    onLoading={importLoading}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <TextArea
             input={input}
             setInput={setInput}
@@ -249,6 +316,7 @@ export default function CoordinateMap() {
               center={[9.082, 8.6753]}
               zoom={6}
               className="h-full"
+              whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
             >
               <TileLayer
                 url={theme === "dark" ? darkUrl : lightUrl}

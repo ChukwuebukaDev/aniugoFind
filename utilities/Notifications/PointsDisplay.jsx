@@ -86,7 +86,9 @@ export default function PointsDisplay({
   };
 
   const handlePointZoom = (p) => {
-    if (zoomToPoint) zoomToPoint(p.lat, p.lng, p.name);
+    if (zoomToPoint) {
+      zoomToPoint(p.lat, p.lng, p.name);
+    }
     setActivePoint({ open: false, index: null });
   };
 

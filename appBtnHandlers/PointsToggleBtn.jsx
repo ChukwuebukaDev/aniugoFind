@@ -17,7 +17,7 @@ export default function PointsToggleBtn({ closePoints, handleClosePoints }) {
         ${
           closePoints
             ? "bg-red-600/80 border-red-400/40 hover:bg-red-500/80 text-white shadow-red-300/30"
-            : "bg-emerald-600/80 border-emerald-400/40 hover:bg-emerald-500/80 text-white shadow-emerald-300/30"
+            : "bg-emerald-600/80 hover:bg-emerald-500/80 text-white shadow-emerald-300/30"
         }`}
     >
       {closePoints ? "Close Points" : "Show Points"}
