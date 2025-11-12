@@ -70,6 +70,9 @@ button {
 .toppest {
   z-index: 11000;
 }
+.topX {
+  z-index: 12000;
+}
 /* In index.css */
 @keyframes pulse {
   0% {

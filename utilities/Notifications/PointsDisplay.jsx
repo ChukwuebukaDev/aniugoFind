@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Navigation, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmModal from "./ConfirmModal";
 import { getRoadDistance } from "../getRoadDistance";
+import { navigateToPoint } from "../navigationToPoint";
 
 export default function PointsDisplay({
   points,
@@ -15,6 +17,7 @@ export default function PointsDisplay({
   const [distanceResults, setDistanceResults] = useState({});
   const [dispShow, setDispShow] = useState(null);
   const [loadingIndex, setLoadingIndex] = useState(null);
+  const [showNavTooltip, setShowNavTooltip] = useState(false);
 
   // --- Delete Handlers ---
   const handleDeleteClick = (point) => setConfirmPoint(point);
@@ -22,6 +25,15 @@ export default function PointsDisplay({
     if (confirmPoint) deletePoint(points.indexOf(confirmPoint));
     setConfirmPoint(null);
   };
+
+  useEffect(() => {
+    const interval = setInterval(
+      () => setShowNavTooltip((prev) => !prev),
+      3000
+    );
+
+    return () => clearInterval(interval);
+  }, [activePoint]);
   const handleCancelDelete = () => setConfirmPoint(null);
 
   const handlePointDistanceCalculations = async (p, i) => {
@@ -199,7 +211,7 @@ export default function PointsDisplay({
                           className="bg-transparent font-bold text-amber-200 text-xl hover:scale-125 transition-transform"
                           title={`Delete ${p.name}`}
                         >
-                          ❌
+                          <X size={24} color="red" />
                         </button>
                       )}
                     </div>
@@ -237,6 +249,31 @@ export default function PointsDisplay({
                               No
                             </button>
                           </div>
+
+                          <AnimatePresence>
+                            {showNavTooltip && (
+                              <motion.div
+                                key="navTooltip"
+                                initial={{ opacity: 0, y: -5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -5 }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
+                                className="absolute transition-all duration-700 left-2/3 flex items-center rounded-full justify-center"
+                              >
+                                Navigate <ArrowRight size={16} />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          <button
+                            className="absolute self-end bg-white/10 p-2 rounded-full "
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigateToPoint(p);
+                            }}
+                          >
+                            <Navigation size={24} color="red" />
+                          </button>
 
                           {/* Tooltip + Distance Button */}
                           <div className="relative w-full mt-2">

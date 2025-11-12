@@ -232,7 +232,7 @@ export default function CoordinateMap() {
           )}
 
           <MarkerBounce />
-          <div className="relative z-[1000] flex flex-col items-end">
+          <div className="relative z-[1000] flex flex-col items-end topX">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
