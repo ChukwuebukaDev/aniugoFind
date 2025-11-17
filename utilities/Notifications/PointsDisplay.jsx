@@ -5,7 +5,7 @@ import ConfirmModal from "./ConfirmModal";
 import { getRoadDistance } from "../getRoadDistance";
 import { navigateToPoint } from "../navigationToPoint";
 import { getTotalDistance } from "../../hooks/totalDistance";
-import RoadRouting from "../../mapComponents/RoadRouting";
+
 export default function PointsDisplay({
   points,
   closePoints,

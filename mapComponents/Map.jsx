@@ -3,6 +3,10 @@ import { useState, useCallback, useEffect, useRef } from "react";
 // 🔹 React-Leaflet
 import L from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.default.css";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
+
+import MarkerClusterGroup from "react-leaflet-cluster";
 // 🔹 Components – Map Logic
 import UserLocationMarker from "../mapComponents/UserLocationMarker";
 
@@ -24,7 +28,6 @@ import SavedCoordinatesSidebar from "./SavedCoordinatesSidebar";
 // 🔹 Hooks & Themes
 import useDarkMode from "../Themes/useDarkMode";
 import usePoints from "../hooks/usePoints";
-import { div } from "framer-motion/client";
 
 // Fix Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -328,28 +331,25 @@ export default function CoordinateMap() {
               )}
 
               {/* Render all markers (including user) */}
-              {points.map((p, idx) => {
-                const isClosest = isClosestMarker(p);
-                const isBouncing = bouncingMarkers.includes(p.name);
-                const key = p.isUser
-                  ? "user-location"
-                  : p.name || `${p.lat}-${p.lng}-${idx}`;
+              <MarkerClusterGroup>
+                {points.map((p, idx) => {
+                  const isClosest = isClosestMarker(p);
+                  const isBouncing = bouncingMarkers.includes(p.name);
+                  const key = p.isUser
+                    ? "user-location"
+                    : p.name || `${p.lat}-${p.lng}-${idx}`;
 
-                return (
-                  <motion.div
-                    key={key}
-                    animate={isBouncing ? { y: [0, -12, 0] } : {}}
-                    transition={{ repeat: 2, duration: 0.3 }}
-                    style={{ transformOrigin: "bottom center" }}
-                  >
+                  return (
                     <ZoomableMarker
+                      key={key}
                       point={p}
                       isClosest={isClosest}
+                      isBouncing={isBouncing}
                       openPopup={popupTarget === p.name}
                     />
-                  </motion.div>
-                );
-              })}
+                  );
+                })}
+              </MarkerClusterGroup>
             </MapContainer>
           </div>
         </div>

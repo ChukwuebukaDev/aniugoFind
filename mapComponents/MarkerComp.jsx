@@ -9,6 +9,7 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
   const handleClick = () => {
     map.flyTo([point.lat, point.lng], 13, { animate: true, duration: 1.5 });
   };
+
   const icon = useMemo(
     () =>
       new L.Icon({
@@ -27,27 +28,25 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
     const el = markerRef.current?.getElement();
     if (!el) return;
 
-    let timer;
     if (isClosest) {
       el.classList.add("bounce");
-      timer = setTimeout(() => el.classList.remove("bounce"), 4000);
+      const timer = setTimeout(() => {
+        el.classList.remove("bounce");
+      }, 2400);
+
+      return () => clearTimeout(timer);
     } else {
       el.classList.remove("bounce");
     }
-    return () => {
-      clearTimeout(timer);
-      el.classList.remove("bounce");
-    };
   }, [isClosest]);
 
-  // 🔸 Automatically open popup when openPopup is true
+  // 🔸 Auto-open popup only once each time openPopup toggles
   useEffect(() => {
     if (openPopup && markerRef.current) {
       markerRef.current.openPopup();
       map.flyTo([point.lat, point.lng], 12, { animate: true, duration: 1.5 });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openPopup]);
+  }, [openPopup, map, point.lat, point.lng]);
 
   return (
     <Marker

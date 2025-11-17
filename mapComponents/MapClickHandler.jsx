@@ -1,6 +1,6 @@
 import { useMapEvents } from "react-leaflet";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getCurrentLocation } from "../otherScripts.js/getLocation";
+
 import ClipLoader from "react-spinners/ClipLoader";
 import ErrorDisplay from "../utilities/Notifications/ErrorDisplay";
 import { motion, AnimatePresence } from "framer-motion";
