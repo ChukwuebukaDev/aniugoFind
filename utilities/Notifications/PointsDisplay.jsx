@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { Navigation, X, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Navigation, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmModal from "./ConfirmModal";
 import { getRoadDistance } from "../getRoadDistance";
 import { navigateToPoint } from "../navigationToPoint";
-
+import { getTotalDistance } from "../../hooks/totalDistance";
 export default function PointsDisplay({
   points,
   closePoints,
@@ -17,7 +17,7 @@ export default function PointsDisplay({
   const [distanceResults, setDistanceResults] = useState({});
   const [dispShow, setDispShow] = useState(null);
   const [loadingIndex, setLoadingIndex] = useState(null);
-  const [showNavTooltip, setShowNavTooltip] = useState(false);
+  const [totalDistance, setTotalDistance] = useState(null);
 
   // --- Delete Handlers ---
   const handleDeleteClick = (point) => setConfirmPoint(point);
@@ -26,14 +26,6 @@ export default function PointsDisplay({
     setConfirmPoint(null);
   };
 
-  useEffect(() => {
-    const interval = setInterval(
-      () => setShowNavTooltip((prev) => !prev),
-      3000
-    );
-
-    return () => clearInterval(interval);
-  }, [activePoint]);
   const handleCancelDelete = () => setConfirmPoint(null);
 
   const handlePointDistanceCalculations = async (p, i) => {
@@ -89,6 +81,13 @@ export default function PointsDisplay({
     }
   }
 
+  useEffect(() => {
+    (async () => {
+      const data = await getTotalDistance(points);
+      if (data) setTotalDistance(data);
+    })();
+  }, [points]);
+
   // --- Point Zoom + Info ---
   const handlePointClick = (i) => {
     setActivePoint((prev) => {
@@ -131,10 +130,17 @@ export default function PointsDisplay({
                      bg-black/70 backdrop-blur-md text-white font-semibold rounded-2xl p-4 shadow-2xl border border-white/10"
         >
           {/* Header */}
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-3 bg-pink-400 p-2 rounded-2xl font-semibold">
             <h3 className="text-lg font-bold text-amber-400">📍 Points</h3>
+            <div>
+              <span className="text-xs">
+                Total Distance: {totalDistance ?? "Loading..."}
+              </span>
+            </div>
             <span className="text-xs opacity-80">
-              Site Count:{" "}
+              {points.filter((p) => p.name !== "Starting point").length < 2
+                ? "Site Count: "
+                : "Site Counts: "}
               {points.filter((p) => p.name !== "Starting point").length}
             </span>
           </div>
@@ -239,6 +245,7 @@ export default function PointsDisplay({
                             >
                               Yes
                             </button>
+
                             <button
                               className="bg-red-700 p-2 rounded-xl hover:bg-red-600 transition-all duration-300"
                               onClick={(e) => {
@@ -249,21 +256,6 @@ export default function PointsDisplay({
                               No
                             </button>
                           </div>
-
-                          <AnimatePresence>
-                            {showNavTooltip && (
-                              <motion.div
-                                key="navTooltip"
-                                initial={{ opacity: 0, y: -5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -5 }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="absolute transition-all duration-700 left-2/3 flex items-center rounded-full justify-center"
-                              >
-                                Navigate <ArrowRight size={16} />
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
 
                           <button
                             className="absolute self-end bg-white/10 p-2 rounded-full "
