@@ -16,7 +16,7 @@ export default function PointsToggleBtn({ closePoints, handleClosePoints }) {
         rounded-l-full backdrop-blur-sm shadow-lg border transition-all duration-500
         ${
           closePoints
-            ? "bg-red-600/80 border-red-400/40 hover:bg-red-500/80 text-white shadow-red-300/30"
+            ? "bg-red-600/80  border-red-400/40 hover:bg-red-500/80 text-white shadow-red-300/30"
             : "bg-emerald-600/80 hover:bg-emerald-500/80 text-white shadow-emerald-300/30"
         }`}
     >

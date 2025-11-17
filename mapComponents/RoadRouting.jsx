@@ -1,114 +1,73 @@
-// import { useEffect, useState } from "react";
-// import { useMap, Polyline, Tooltip } from "react-leaflet";
-// import L from "leaflet";
-// import "leaflet-routing-machine";
+import { useEffect, useState } from "react";
+import { Polyline, Tooltip } from "react-leaflet";
+import polyline from "@mapbox/polyline";
+import { getRoadDistance } from "../utilities/getRoadDistance";
 
-// function formatDistance(meters) {
-//   if (meters < 1000) return `${Math.round(meters)} m`;
-//   return `${(meters / 1000).toFixed(2)} km`;
-// }
+function formatDistance(meters) {
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  return `${(meters / 1000).toFixed(2)} km`;
+}
 
-// export default function RoadRouting({ points }) {
-//   const map = useMap();
-//   const [routes, setRoutes] = useState([]);
+export default function RoadRouting({ points }) {
+  const [routes, setRoutes] = useState([]);
 
-//   useEffect(() => {
-//     if (!map || !points || points.length < 2) return;
+  useEffect(() => {
+    if (!points || points.length < 2) return;
 
-//     let isCancelled = false;
-//     const tempRoutes = [];
-//     const activeControls = [];
+    let cancelled = false;
 
-//     const createRoute = (start, end) => {
-//       return new Promise((resolve) => {
-//         const control = L.Routing.control({
-//           waypoints: [
-//             L.latLng(start.lat, start.lng),
-//             L.latLng(end.lat, end.lng),
-//           ],
-//           lineOptions: { styles: [{ color: "#1976d2", weight: 3 }] },
-//           createMarker: () => null,
-//           routeWhileDragging: false,
-//           addWaypoints: false,
-//           show: false,
-//           containerClassName: "hidden",
-//         }).addTo(map);
+    const computeRoutes = async () => {
+      const newRoutes = [];
 
-//         activeControls.push(control);
+      for (let i = 0; i < points.length - 1; i++) {
+        const from = points[i];
+        const to = points[i + 1];
 
-//         control.on("routesfound", (e) => {
-//           if (isCancelled) return;
+        const result = await getRoadDistance(from, to);
+        if (!result?.geometry) continue;
 
-//           const route = e.routes[0];
-//           const coords = route.coordinates.map((c) => [c.lat, c.lng]);
-//           const midIndex = Math.floor(coords.length / 2);
+        // decode ORS geometry (polyline) → [[lat,lng], ...]
+        const decoded = polyline.decode(result.geometry);
+        if (!decoded || decoded.length === 0) continue;
 
-//           tempRoutes.push({
-//             coordinates: coords,
-//             distance: route.summary.totalDistance,
-//             midpoint: coords[midIndex],
-//           });
+        // convert to {lat,lng} objects for Leaflet
+        const coords = decoded.map(([lat, lng]) => ({ lat, lng }));
+        if (coords.length === 0) continue;
 
-//           // ✅ Only remove control if still attached to a map
-//           if (control._map) {
-//             map.removeControl(control);
-//           }
+        const midpoint = coords[Math.floor(coords.length / 2)];
 
-//           resolve();
-//         });
+        newRoutes.push({
+          coordinates: coords,
+          distance: result.distance,
+          midpoint,
+        });
+      }
 
-//         control.on("routingerror", () => {
-//           // ✅ Handle network/routing failure gracefully
-//           if (control._map) {
-//             map.removeControl(control);
-//           }
-//           resolve();
-//         });
-//       });
-//     };
+      if (!cancelled) setRoutes(newRoutes);
+    };
 
-//     const createAllRoutes = async () => {
-//       for (let i = 0; i < points.length - 1; i++) {
-//         await createRoute(points[i], points[i + 1]);
-//       }
-//       if (!isCancelled) setRoutes([...tempRoutes]);
-//     };
+    computeRoutes();
 
-//     createAllRoutes();
+    return () => {
+      cancelled = true;
+    };
+  }, [points]);
 
-//     return () => {
-//       isCancelled = true;
-//       // ✅ Cleanup all routing controls safely
-//       activeControls.forEach((control) => {
-//         if (control._map) {
-//           try {
-//             map.removeControl(control);
-//           } catch (err) {
-//             console.warn("Control cleanup skipped:", err);
-//           }
-//         }
-//       });
-//     };
-//   }, [points, map]);
-
-//   return (
-//     <>
-//       {routes.map((r, idx) => (
-//         <Polyline
-//           key={idx}
-//           positions={r.coordinates}
-//           pathOptions={{ color: "#1976d2", weight: 3 }}
-//         >
-//           <Tooltip
-//             direction="center"
-//             permanent
-//             offset={[0, -10]}
-//             interactive={false}
-//           >
-//             {formatDistance(r.distance)}
-//           </Tooltip>
-//         </Polyline>
-//       ))}
-//     </>
-//   );
-// }
+  return (
+    <>
+      {routes.map((route, idx) =>
+        route.coordinates && route.coordinates.length > 0 ? (
+          <Polyline
+            key={idx}
+            positions={route.coordinates}
+            pathOptions={{ color: "#1976d2", weight: 3 }}
+          >
+            <Tooltip permanent direction="center" offset={[0, -10]}>
+              {formatDistance(route.distance)}
+            </Tooltip>
+          </Polyline>
+        ) : null
+      )}
+    </>
+  );
+}

@@ -40,7 +40,10 @@ export default function ExcelCoordinateImporter({
           );
 
           let name =
-            normalized["site id"] ?? normalized.name ?? `Point ${i + 1}`;
+            normalized["ihs site id"] ??
+            normalized["site id"] ??
+            normalized.name ??
+            `Point ${i + 1}`;
           if (typeof name === "string") name = name.trim().toUpperCase();
 
           if (isNaN(lat) || isNaN(lng)) return null;
@@ -92,7 +95,7 @@ export default function ExcelCoordinateImporter({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="p-4 bg-black/70 backdrop-blur-md rounded-2xl border border-white/10 text-white w-[90vw] sm:max-w-md shadow-xl"
+      className="p-4 bg-black/70 backdrop-blur-md rounded-2xl border border-white/10 text-white w-[90vw] sm:max-w-md shadow-xl "
     >
       <h3 className="text-lg font-bold mb-2 text-amber-400">
         📄 Import Coordinates from Excel

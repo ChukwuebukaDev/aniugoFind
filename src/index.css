@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 :root {
-  font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
   font-synthesis: none;
@@ -12,6 +11,7 @@
 
 /* Apply globally */
 body {
+  font-family: "Montserrat", sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   transition: background-color 0.7s ease, color 0.3s ease;
@@ -67,14 +67,12 @@ button {
   animation: bounce 0.8s ease-in-out infinite;
 }
 .topper {
-  z-index: 10000;
+  z-index: 5000;
 }
 .toppest {
-  z-index: 11000;
+  z-index: 10000;
 }
-.topX {
-  z-index: 12000;
-}
+
 /* In index.css */
 @keyframes pulse {
   0% {

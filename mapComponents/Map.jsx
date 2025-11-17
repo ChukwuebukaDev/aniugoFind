@@ -10,6 +10,7 @@ import {
   MapClickHandler,
   ZoomableMarker,
   MarkerBounce,
+  RoadRouting,
 } from "../mapComponents";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,7 +43,6 @@ export default function CoordinateMap() {
   const [closePoints, setClosePoints] = useState(true);
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
   const [popupTarget, setPopupTarget] = useState(null);
-  const [zoomTarget, setZoomTarget] = useState(null);
   const [offMap, setOffMap] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
@@ -200,11 +200,7 @@ export default function CoordinateMap() {
             onClick={() => setIsSidebarOpen((p) => !p)}
             className={`fixed top-1/3 z-[1100] px-2.5 py-1.5 text-xs font-semibold 
               backdrop-blur-sm shadow-lg border transition-all duration-500
-              ${
-                isSidebarOpen
-                  ? "bg-red-600/80 border-red-400/40 right-0 rounded-l-full hover:bg-red-500/80 text-white shadow-red-300/30"
-                  : "bg-emerald-600/80 border-emerald-400/40 left-0 rounded-r-full hover:bg-emerald-500/80 text-white shadow-emerald-300/30"
-              }`}
+              ${"bg-emerald-600/80 border-emerald-400/40 left-0 rounded-r-full hover:bg-emerald-500/80 text-white shadow-emerald-300/30"}`}
           >
             {isSidebarOpen ? "Hide saved" : "Show saved"}
           </motion.button>
@@ -232,12 +228,12 @@ export default function CoordinateMap() {
           )}
 
           <MarkerBounce />
-          <div className="relative z-[1000] flex flex-col items-end topX">
+          <div className="relative z-[1000] flex flex-col items-end">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowImporter((prev) => !prev)}
-              className="bg-emerald-600/80 text-white  shadow-emerald-300/30 fixed toppest top-2/3 left-0 z-[1100] px-2.5 py-1.5 text-xs font-semibold 
+              className="bg-emerald-600/80 text-white  shadow-emerald-300/30 fixed st top-2/3 left-0 z-[1100] px-2.5 py-1.5 text-xs font-semibold 
         rounded-r-full backdrop-blur-sm shadow-lg transition-all duration-500"
             >
               {importLoading && (
@@ -322,6 +318,7 @@ export default function CoordinateMap() {
                 url={theme === "dark" ? darkUrl : lightUrl}
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               />
+              <RoadRouting points={points} />
 
               {offMap && <MapClickHandler setPoints={setAllPoints} />}
 
