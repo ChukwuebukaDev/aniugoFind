@@ -1,5 +1,6 @@
-@import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import "tailwindcss";
+
 :root {
   font-optical-sizing: auto;
   font-style: normal;
@@ -15,10 +16,6 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   transition: background-color 0.7s ease, color 0.3s ease;
-}
-
-html {
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 button {

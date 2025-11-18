@@ -49,6 +49,7 @@ export default function CoordinateMap() {
   const [offMap, setOffMap] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [autoCluster, setAutoCluser] = useState(false);
 
   const [theme] = useDarkMode();
   const mapRef = useRef();
@@ -207,7 +208,26 @@ export default function CoordinateMap() {
           >
             {isSidebarOpen ? "Hide saved" : "Show saved"}
           </motion.button>
-
+          <motion.button
+            whileHover={{ scale: 1.08, x: isSidebarOpen ? 4 : -4 }}
+            whileTap={{ scale: 0.95 }}
+            animate={{
+              opacity: 1,
+              x: 0,
+              transition: { duration: 0.4, ease: "easeOut" },
+            }}
+            initial={{ opacity: 0, x: 10 }}
+            onClick={() => setAutoCluser((p) => !p)}
+            className={`fixed left-0 rounded-r-full top-40 z-[1500] px-2.5 py-1.5 text-xs font-semibold 
+              backdrop-blur-sm shadow-lg border transition-all duration-500
+              ${
+                !autoCluster
+                  ? "bg-emerald-600/80 border-emerald-400/40  hover:bg-emerald-500/80 text-white shadow-emerald-300/30"
+                  : "bg-red-500"
+              }`}
+          >
+            {autoCluster ? "Stop Cluster" : "Auto Cluster"}
+          </motion.button>
           <SavedCoordinatesSidebar
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
@@ -331,25 +351,49 @@ export default function CoordinateMap() {
               )}
 
               {/* Render all markers (including user) */}
-              <MarkerClusterGroup>
-                {points.map((p, idx) => {
-                  const isClosest = isClosestMarker(p);
-                  const isBouncing = bouncingMarkers.includes(p.name);
-                  const key = p.isUser
-                    ? "user-location"
-                    : p.name || `${p.lat}-${p.lng}-${idx}`;
+              {autoCluster && (
+                <MarkerClusterGroup>
+                  {points.map((p, idx) => {
+                    const isClosest = isClosestMarker(p);
+                    const isBouncing = bouncingMarkers.includes(p.name);
+                    const key = p.isUser
+                      ? "user-location"
+                      : p.name || `${p.lat}-${p.lng}-${idx}`;
 
-                  return (
-                    <ZoomableMarker
-                      key={key}
-                      point={p}
-                      isClosest={isClosest}
-                      isBouncing={isBouncing}
-                      openPopup={popupTarget === p.name}
-                    />
-                  );
-                })}
-              </MarkerClusterGroup>
+                    return (
+                      <ZoomableMarker
+                        key={key}
+                        point={p}
+                        isClosest={isClosest}
+                        isBouncing={isBouncing}
+                        openPopup={popupTarget === p.name}
+                      />
+                    );
+                  })}
+                </MarkerClusterGroup>
+              )}
+
+              {!autoCluster && (
+                <>
+                  {points.map((p, idx) => {
+                    const isClosest = isClosestMarker(p);
+                    const isBouncing = bouncingMarkers.includes(p.name);
+                    const key = p.isUser
+                      ? "user-location"
+                      : p.name || `${p.lat}-${p.lng}-${idx}`;
+
+                    return (
+                      <ZoomableMarker
+                        key={key}
+                        point={p}
+                        isClosest={isClosest}
+                        isBouncing={isBouncing}
+                        openPopup={popupTarget === p.name}
+                      />
+                    );
+                  })}
+                </>
+              )}
             </MapContainer>
           </div>
         </div>
