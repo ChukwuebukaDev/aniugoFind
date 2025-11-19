@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { X } from "lucide-react";
 import extraPointBarToggler from "../hooks/helperHook";
 import AddExtraPoints from "./AddExtraPoints";
-import CalculateAndClearBtn from "./TextBtn";
-import TextInputBtn from "../appBtnHandlers/TextInputBtn";
+import CalculateAndClearBtn from "../appBtnHandlers/TextBtn";
 import useDarkMode from "../Themes/useDarkMode";
+import { useUiStore } from "../Zustand/uiState";
 
 const TextArea = ({
   input,
@@ -15,8 +14,8 @@ const TextArea = ({
   clearAll,
 }) => {
   const { showBar } = extraPointBarToggler();
-  const [showInput, setShowInput] = useState(false);
   const [theme] = useDarkMode();
+  const { showInput, toggleShowInput } = useUiStore();
 
   // 🎨 Define theme-based styles
   const isDark = theme === "dark";
@@ -33,14 +32,6 @@ const TextArea = ({
     <>
       {/* 🔹 Toggle for adding extra points */}
       {showBar && <AddExtraPoints setPoints={setPoints} />}
-
-      {/* 🔹 Floating toggle button */}
-      <TextInputBtn
-        input={input}
-        showInput={showInput}
-        setShowInput={setShowInput}
-        setPoints={setPoints}
-      />
 
       {/* 🔹 Animated, theme-aware TextArea Container */}
       <div
@@ -90,7 +81,7 @@ const TextArea = ({
             input={input}
             points={points}
             setPoints={setPoints}
-            setShowInput={setShowInput}
+            setShowInput={toggleShowInput}
             calculateResults={calculateResults}
             clearAll={clearAll}
           />

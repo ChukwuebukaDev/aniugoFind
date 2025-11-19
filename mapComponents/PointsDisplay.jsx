@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Navigation, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import ConfirmModal from "./ConfirmModal";
-import { getRoadDistance } from "../getRoadDistance";
-import { navigateToPoint } from "../navigationToPoint";
-import { getTotalDistance } from "../../hooks/totalDistance";
+import ConfirmModal from "../utilities/Notifications/ConfirmModal";
+import { getRoadDistance } from "../utilities/getRoadDistance";
+import { navigateToPoint } from "../utilities/navigationToPoint";
+import { getTotalDistance } from "../hooks/totalDistance";
 
 export default function PointsDisplay({
   points,
@@ -131,8 +131,7 @@ export default function PointsDisplay({
                      bg-black/70 backdrop-blur-md text-white font-semibold rounded-2xl p-4 shadow-2xl border border-white/10"
         >
           {/* Header */}
-          <div className="flex justify-between items-center mb-3 bg-pink-400 p-2 rounded-2xl font-semibold hover:bg-pink-300 cursor-pointer transition-colors duration-900 hover:text-black">
-            <h3 className="text-lg font-bold text-amber-400">📍 Points</h3>
+          <div className="flex text-black justify-between items-center mb-3 conic p-2 rounded-2xl font-semibold  cursor-pointer transition-colors duration-900 ">
             <div>
               <span className="text-xs">
                 Total Distance: {totalDistance ?? "Loading..."}

@@ -1,6 +1,7 @@
 import { Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useEffect, useRef, useMemo } from "react";
+import { motion } from "framer-motion";
 
 export default function ZoomableMarker({ point, isClosest, openPopup }) {
   const map = useMap();
@@ -56,15 +57,7 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
       icon={icon}
       eventHandlers={{ click: handleClick }}
     >
-      <Popup>
-        <div className="bg-pink-500 p-1 rounded">
-          <strong>{point.name}</strong>
-          <br />
-          <span className="text-xs">
-            {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
-          </span>
-        </div>
-      </Popup>
+      <Popup>{point.name}</Popup>
     </Marker>
   );
 }

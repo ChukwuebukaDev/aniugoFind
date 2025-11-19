@@ -13,43 +13,13 @@
 /* Apply globally */
 body {
   font-family: "Montserrat", sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
   transition: background-color 0.7s ease, color 0.3s ease;
 }
 
 button {
   cursor: pointer;
 }
-.preset-btn {
-  border-radius: 8px;
-  padding: 0.2em 1.2em;
-  font-size: 1em;
-  font-weight: 600;
-  font-family: inherit;
-  color: whitesmoke;
-  transition: all 0.25s ease-in;
-}
 
-.preset-btn:focus,
-.preset-btn:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.head-logo-container {
-  height: 100%;
-  width: 25%;
-  cursor: pointer;
-  transition: all 0.6s ease;
-}
-.head-logo-container .head--logo {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.head-logo-container:hover {
-  transform: scale(1.5);
-}
 @keyframes bounce {
   0%,
   100% {
@@ -63,6 +33,33 @@ button {
 .leaflet-marker-icon.bounce {
   animation: bounce 0.8s ease-in-out infinite;
 }
+/* Popup container */
+.leaflet-popup-content-wrapper {
+  /* https://grabient.com/HQNgTAHANMAsEFYZjLKBaADMAzARmi2DAE4QZYTDtY8wNswQSY8B2cvXJh4BE+ui6ZMOIA?style=angularSwatches&steps=15&angle=210 */
+
+  background: linear-gradient(
+    to left,
+    #4776e6,
+    #8e54e9
+  ) !important; /* gray-800 */
+  color: white !important;
+  border-radius: 30px !important;
+  padding: 1px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Popup tip arrow */
+.leaflet-popup-tip {
+  background: #1f2937 !important;
+}
+
+/* Inner text wrapper */
+.leaflet-popup-content {
+  margin: 0 !important;
+  padding: 8px 12px !important;
+  font-size: 14px;
+}
+
 .topper {
   z-index: 5000;
 }
@@ -84,4 +81,38 @@ button {
 }
 .pulse {
   animation: pulse 1.2s ease-out;
+}
+.conic {
+  background: conic-gradient(
+    from 210deg,
+    rgba(197, 187, 184, 1) 0deg,
+    rgba(197, 187, 184, 1) 24deg,
+    rgba(184, 181, 184, 1) 24deg,
+    rgba(184, 181, 184, 1) 48deg,
+    rgba(169, 175, 183, 1) 48deg,
+    rgba(169, 175, 183, 1) 72deg,
+    rgba(154, 168, 181, 1) 72deg,
+    rgba(154, 168, 181, 1) 96deg,
+    rgba(139, 161, 179, 1) 96deg,
+    rgba(139, 161, 179, 1) 120deg,
+    rgba(125, 152, 175, 1) 120deg,
+    rgba(125, 152, 175, 1) 144deg,
+    rgba(112, 144, 171, 1) 144deg,
+    rgba(112, 144, 171, 1) 168deg,
+    rgba(101, 135, 166, 1) 168deg,
+    rgba(101, 135, 166, 1) 192deg,
+    rgba(92, 126, 161, 1) 192deg,
+    rgba(92, 126, 161, 1) 216deg,
+    rgba(85, 117, 155, 1) 216deg,
+    rgba(85, 117, 155, 1) 240deg,
+    rgba(81, 108, 148, 1) 240deg,
+    rgba(81, 108, 148, 1) 264deg,
+    rgba(79, 99, 141, 1) 264deg,
+    rgba(79, 99, 141, 1) 288deg,
+    rgba(80, 90, 133, 1) 288deg,
+    rgba(80, 90, 133, 1) 312deg,
+    rgba(84, 83, 125, 1) 312deg,
+    rgba(84, 83, 125, 1) 336deg,
+    rgba(91, 75, 116, 1) 336deg 360deg
+  );
 }
