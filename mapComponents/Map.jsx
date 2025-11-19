@@ -23,6 +23,7 @@ import useDarkMode from "../Themes/useDarkMode";
 import { usePointsStore } from "../Zustand/MapStateManager";
 import { useUiStore } from "../Zustand/uiState";
 import { MapControls } from "../appBtnHandlers/MapControls";
+import { X } from "lucide-react";
 
 // Fix Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -67,6 +68,8 @@ export default function CoordinateMap() {
     setLoading,
     setResults,
     closePoints,
+    setClosePoints,
+    toggleClosePoints,
     toggleShowImporter,
   } = useUiStore();
 
@@ -242,7 +245,14 @@ export default function CoordinateMap() {
               />
             </>
           )}
-
+          {closePoints && (
+            <button
+              onClick={toggleClosePoints}
+              className="absolute cursor-pointer top-7 topper rounded-2xl font-bold p-1 bg-red-600 right-4 "
+            >
+              <X size={18} />
+            </button>
+          )}
           <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
             <MapContainer
               key={theme}

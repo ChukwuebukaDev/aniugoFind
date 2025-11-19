@@ -75,7 +75,7 @@ export function MapControls() {
               setActiveTooltip(i);
               setTimeout(() => setActiveTooltip(null), 1500);
             }}
-            className="group h-10 w-10 rounded-xl bg-emerald-500 shadow-md backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-emerald-600 transition-all relative"
+            className="group h-10 w-10 rounded-full bg-emerald-500 shadow-md backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-emerald-600 transition-all relative"
           >
             {control.icon}
 

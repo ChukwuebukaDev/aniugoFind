@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigation, X } from "lucide-react";
+import { Navigation, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmModal from "../utilities/Notifications/ConfirmModal";
 import { getRoadDistance } from "../utilities/getRoadDistance";
@@ -217,7 +217,7 @@ export default function PointsDisplay({
                           className="bg-transparent font-bold text-amber-200 text-xl hover:scale-125 transition-transform"
                           title={`Delete ${p.name}`}
                         >
-                          <X size={24} color="red" />
+                          <Trash size={24} color="red" />
                         </button>
                       )}
                     </div>

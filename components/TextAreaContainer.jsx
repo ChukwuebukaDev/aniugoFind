@@ -43,7 +43,7 @@ const TextArea = ({
           className="absolute topper right-0 bottom-1 p-2 hover:bg-white/80 active:bg-white/90 bg-white rounded-2xl hover:shadow-black"
           role="close button"
           title="close box"
-          onClick={() => setShowInput(false)}
+          onClick={toggleShowInput}
         >
           <X size={24} color="red" />
         </button>
