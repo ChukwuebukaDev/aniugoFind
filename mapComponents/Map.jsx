@@ -14,6 +14,7 @@ import {
   RoadRouting,
   FitmapHandler,
 } from "../mapComponents";
+import { findClosestToStartRoad } from "../utilities/closestPairsCalculation";
 import TextArea from "../components/TextAreaContainer";
 import PointsDisplay from "./PointsDisplay";
 import Spinner from "../components/Spinner";
@@ -95,26 +96,28 @@ export default function CoordinateMap() {
 
   // ----------------- Closest pair calculation
   const calculateResults = useCallback(
-    (pointList) => {
+    async (pointList) => {
       if (!pointList || pointList.length < 2) {
         setResults(null);
         return;
       }
-      const pair = findClosestPair(pointList);
-      if (!pair) {
+
+      const result = await findClosestToStartRoad(pointList);
+      if (!result) {
         setResults(null);
         return;
       }
 
-      setResults({ closestPair: pair });
-      const [a, b] = pair;
+      const [a, b] = result.pair;
 
+      setResults({ closestPair: [a, b] });
+
+      // Bounce effect
       const bouncing = pointList.filter(
         (p) =>
           (Math.abs(p.lat - a.lat) < 1e-6 && Math.abs(p.lng - a.lng) < 1e-6) ||
           (Math.abs(p.lat - b.lat) < 1e-6 && Math.abs(p.lng - b.lng) < 1e-6)
       );
-
       setBouncingMarkers(bouncing.map((b) => b.name));
       const timeout = setTimeout(() => setBouncingMarkers([]), 4000);
       return () => clearTimeout(timeout);
@@ -124,7 +127,9 @@ export default function CoordinateMap() {
 
   // Debounce calculation
   useEffect(() => {
-    const id = setTimeout(() => calculateResults(points), 300);
+    const id = setTimeout(() => {
+      calculateResults(points);
+    }, 300);
     return () => clearTimeout(id);
   }, [points, calculateResults]);
 

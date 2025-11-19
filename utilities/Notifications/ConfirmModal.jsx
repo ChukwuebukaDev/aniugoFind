@@ -7,6 +7,7 @@ export default function ConfirmModal({
   message = "Are you sure you want to proceed?",
   onConfirm,
   onCancel,
+  reply = "Delete",
 }) {
   const modalRef = useRef(null);
 
@@ -75,7 +76,7 @@ export default function ConfirmModal({
                 className="px-4 py-2 rounded-md font-semibold bg-red-600 
                            hover:bg-red-500 text-white shadow-md transition-all duration-200"
               >
-                Delete
+                {reply}
               </button>
             </div>
           </motion.div>

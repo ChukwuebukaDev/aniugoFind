@@ -1,11 +1,13 @@
 import { Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-import { useEffect, useRef, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { navigateToPoint } from "../../utilities/navigationToPoint";
+import ConfirmModal from "../../utilities/Notifications/ConfirmModal";
 
 export default function ZoomableMarker({ point, isClosest, openPopup }) {
   const map = useMap();
   const markerRef = useRef();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleClick = () => {
     map.flyTo([point.lat, point.lng], 13, { animate: true, duration: 1.5 });
@@ -24,24 +26,21 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
     [isClosest]
   );
 
-  // 🔸 Bounce effect for closest markers
+  // Bounce
   useEffect(() => {
     const el = markerRef.current?.getElement();
     if (!el) return;
 
     if (isClosest) {
       el.classList.add("bounce");
-      const timer = setTimeout(() => {
-        el.classList.remove("bounce");
-      }, 2400);
-
+      const timer = setTimeout(() => el.classList.remove("bounce"), 2400);
       return () => clearTimeout(timer);
     } else {
       el.classList.remove("bounce");
     }
   }, [isClosest]);
 
-  // 🔸 Auto-open popup only once each time openPopup toggles
+  // Auto-open popup
   useEffect(() => {
     if (openPopup && markerRef.current) {
       markerRef.current.openPopup();
@@ -49,15 +48,41 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
     }
   }, [openPopup, map, point.lat, point.lng]);
 
+  // 🚀 What happens after user confirms
+  const handleConfirm = () => {
+    setShowConfirm(false);
+    navigateToPoint(point);
+  };
+
   return (
-    <Marker
-      key={point.name}
-      ref={markerRef}
-      position={[point.lat, point.lng]}
-      icon={icon}
-      eventHandlers={{ click: handleClick }}
-    >
-      <Popup>{point.name}</Popup>
-    </Marker>
+    <>
+      {/* Marker */}
+      <Marker
+        key={point.name}
+        ref={markerRef}
+        position={[point.lat, point.lng]}
+        icon={icon}
+        eventHandlers={{ click: handleClick }}
+      >
+        <Popup>
+          <div
+            onClick={() => setShowConfirm(true)}
+            className="cursor-pointer font-medium"
+          >
+            {point.name}
+          </div>
+        </Popup>
+      </Marker>
+
+      {/* Confirm modal */}
+      <ConfirmModal
+        show={showConfirm}
+        title="Navigate to this point?"
+        message={`Do you want to open navigation to ${point.name}?`}
+        onConfirm={handleConfirm}
+        onCancel={() => setShowConfirm(false)}
+        reply={"Yes"}
+      />
+    </>
   );
 }
