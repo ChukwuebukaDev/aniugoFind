@@ -35,26 +35,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-function findClosestPair(points = []) {
-  if (points.length < 2) return null;
-  let minDist = Infinity;
-  let pair = null;
-  for (let i = 0; i < points.length - 1; i++) {
-    for (let j = i + 1; j < points.length; j++) {
-      const a = points[i];
-      const b = points[j];
-      const dx = a.lat - b.lat;
-      const dy = a.lng - b.lng;
-      const dist = dx * dx + dy * dy;
-      if (dist < minDist) {
-        minDist = dist;
-        pair = [a, b];
-      }
-    }
-  }
-  return pair;
-}
-
 // -----------------
 export default function CoordinateMap() {
   const mapRef = useRef();
@@ -124,6 +104,11 @@ export default function CoordinateMap() {
     },
     [setResults]
   );
+
+  (async () => {
+    const data = await findClosestToStartRoad(points);
+    if (data) console.log(data);
+  })();
 
   // Debounce calculation
   useEffect(() => {
