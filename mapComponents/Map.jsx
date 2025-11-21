@@ -23,7 +23,6 @@ import SavedCoordinatesSidebar from "./SavedCoordinatesSidebar";
 import useDarkMode from "../Themes/useDarkMode";
 import { usePointsStore } from "../Zustand/MapStateManager";
 import { useUiStore } from "../Zustand/uiState";
-import { MapControls } from "../appBtnHandlers/MapControls";
 import { X } from "lucide-react";
 
 // Fix Leaflet icons
@@ -75,16 +74,22 @@ export default function CoordinateMap() {
   }, [setLoading]);
 
   // ----------------- Closest pair calculation
-  const calculateResults = useCallback(
-    async (pointList) => {
-      if (!pointList || pointList.length < 2) {
-        setResults(null);
-        return;
-      }
+  const bounceTimeoutRef = useRef();
 
+  const calculateResults = useCallback(async (pointList) => {
+    if (!pointList || pointList.length < 2) {
+      setResults(null);
+      setBouncingMarkers([]);
+      return;
+    }
+
+    try {
       const result = await findClosestToStartRoad(pointList);
-      if (!result) {
+
+      // Guard: invalid result
+      if (!result || !result.pair || result.pair.some((p) => !p)) {
         setResults(null);
+        setBouncingMarkers([]);
         return;
       }
 
@@ -92,23 +97,28 @@ export default function CoordinateMap() {
 
       setResults({ closestPair: [a, b] });
 
-      // Bounce effect
+      // Find markers to bounce
       const bouncing = pointList.filter(
         (p) =>
-          (Math.abs(p.lat - a.lat) < 1e-6 && Math.abs(p.lng - a.lng) < 1e-6) ||
-          (Math.abs(p.lat - b.lat) < 1e-6 && Math.abs(p.lng - b.lng) < 1e-6)
+          (a &&
+            Math.abs(p.lat - a.lat) < 1e-5 &&
+            Math.abs(p.lng - a.lng) < 1e-5) ||
+          (b &&
+            Math.abs(p.lat - b.lat) < 1e-5 &&
+            Math.abs(p.lng - b.lng) < 1e-5)
       );
-      setBouncingMarkers(bouncing.map((b) => b.name));
-      const timeout = setTimeout(() => setBouncingMarkers([]), 4000);
-      return () => clearTimeout(timeout);
-    },
-    [setResults]
-  );
 
-  (async () => {
-    const data = await findClosestToStartRoad(points);
-    if (data) console.log(data);
-  })();
+      setBouncingMarkers(bouncing.map((m) => m.name));
+
+      // Clear previous timeout
+      if (bounceTimeoutRef.current) clearTimeout(bounceTimeoutRef.current);
+      bounceTimeoutRef.current = setTimeout(() => setBouncingMarkers([]), 4000);
+    } catch (err) {
+      console.error("Error calculating closest pair:", err);
+      setResults(null);
+      setBouncingMarkers([]);
+    }
+  }, []);
 
   // Debounce calculation
   useEffect(() => {
@@ -153,125 +163,111 @@ export default function CoordinateMap() {
   return (
     <>
       <Spinner loading={loading} />
-      {!loading && (
-        <div className="relative w-full h-full flex flex-col bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors duration-500 ease-in-out">
-          <SavedCoordinatesSidebar
-            isOpen={isSidebarOpen}
-            onClose={() => toggleSidebar}
-            coordinates={points}
-            onLoadSavedSet={(savedCoords) => {
-              setAllPoints(savedCoords);
-              setTimeout(
-                () =>
-                  window.dispatchEvent(
-                    new CustomEvent("fitToMarkers", { detail: savedCoords })
-                  ),
-                100
-              );
-            }}
-          />
 
-          {isSidebarOpen && (
-            <div
-              onClick={toggleSidebar}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999]"
-            />
+      <SavedCoordinatesSidebar
+        isOpen={isSidebarOpen}
+        onClose={toggleSidebar}
+        coordinates={points}
+        onLoadSavedSet={(savedCoords) => {
+          setAllPoints(savedCoords);
+          setTimeout(
+            () =>
+              window.dispatchEvent(
+                new CustomEvent("fitToMarkers", { detail: savedCoords })
+              ),
+            100
+          );
+        }}
+      />
+
+      <MarkerBounce />
+
+      <div className="relative z-[1000] flex flex-col items-end">
+        <AnimatePresence>
+          {showImporter && (
+            <motion.div
+              key="excel-importer"
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[90%] sm:w-[70%]"
+            >
+              <ExcelCoordinateImporter
+                onImport={(importedPoints) => {
+                  setAllPoints(importedPoints);
+                  useUiStore.getState().setShowImporter(false);
+                  setTimeout(
+                    () =>
+                      window.dispatchEvent(
+                        new CustomEvent("fitToMarkers", {
+                          detail: importedPoints,
+                        })
+                      ),
+                    100
+                  );
+                }}
+                setShowImporter={toggleShowImporter}
+                onLoading={importLoading}
+              />
+            </motion.div>
           )}
+        </AnimatePresence>
+      </div>
 
-          <MarkerBounce />
+      <TextArea
+        input={input}
+        setInput={setInput}
+        points={points}
+        setPoints={setAllPoints}
+        calculateResults={calculateResults}
+        clearAll={clearAll}
+      />
 
-          <MapControls />
-
-          <div className="relative z-[1000] flex flex-col items-end">
-            <AnimatePresence>
-              {showImporter && (
-                <motion.div
-                  key="excel-importer"
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[90%] sm:w-[70%]"
-                >
-                  <ExcelCoordinateImporter
-                    onImport={(importedPoints) => {
-                      setAllPoints(importedPoints);
-                      useUiStore.getState().setShowImporter(false);
-                      setTimeout(
-                        () =>
-                          window.dispatchEvent(
-                            new CustomEvent("fitToMarkers", {
-                              detail: importedPoints,
-                            })
-                          ),
-                        100
-                      );
-                    }}
-                    setShowImporter={toggleShowImporter}
-                    onLoading={importLoading}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <TextArea
-            input={input}
-            setInput={setInput}
+      {points.length > 1 && (
+        <>
+          <PointsDisplay
+            closePoints={closePoints}
+            deletePoint={deletePoint}
             points={points}
-            setPoints={setAllPoints}
-            calculateResults={calculateResults}
-            clearAll={clearAll}
+            zoomToPoint={zoomToPoint}
+            setPopupTarget={setPopupTarget}
           />
-
-          {points.length > 1 && (
-            <>
-              <PointsDisplay
-                closePoints={closePoints}
-                deletePoint={deletePoint}
-                points={points}
-                zoomToPoint={zoomToPoint}
-                setPopupTarget={setPopupTarget}
-              />
-            </>
-          )}
-          {closePoints && (
-            <button
-              onClick={toggleClosePoints}
-              className="absolute cursor-pointer top-7 topper rounded-2xl font-bold p-1 bg-red-600 right-4 "
-            >
-              <X size={18} />
-            </button>
-          )}
-          <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
-            <MapContainer
-              key={theme}
-              center={[9.082, 8.6753]}
-              zoom={6}
-              className="h-full"
-              whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
-            >
-              <TileLayer
-                url={theme === "dark" ? darkUrl : lightUrl}
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              />
-              <RoadRouting points={points} />
-              {offMap && <MapClickHandler setPoints={setAllPoints} />}
-              <FitmapHandler markers={memoPoints} />
-              {userLocation && (
-                <UserLocationMarker userLocation={userLocation} />
-              )}
-              <MarkerLayer
-                points={memoPoints}
-                autoCluster={autoCluster}
-                bouncingMarkers={bouncingMarkers}
-                isClosestMarker={isClosestMarker}
-                popupTarget={popupTarget}
-              />
-            </MapContainer>
-          </div>
-        </div>
+        </>
       )}
+      {closePoints && points.length > 1 && (
+        <button
+          onClick={toggleClosePoints}
+          className="absolute md:hidden cursor-pointer top-7 topper rounded-2xl font-bold p-1 bg-red-600 right-4 "
+        >
+          <X size={18} />
+        </button>
+      )}
+      <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
+        <MapContainer
+          key={theme}
+          center={[9.082, 8.6753]}
+          zoom={6}
+          className="h-full"
+          whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
+        >
+          <TileLayer
+            url={theme === "dark" ? darkUrl : lightUrl}
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          />
+          <RoadRouting points={points} />
+          {offMap && <MapClickHandler setPoints={setAllPoints} />}
+          <FitmapHandler markers={memoPoints} />
+          {userLocation && <UserLocationMarker userLocation={userLocation} />}
+          <MarkerLayer
+            points={memoPoints}
+            autoCluster={autoCluster}
+            bouncingMarkers={bouncingMarkers}
+            isClosestMarker={isClosestMarker}
+            popupTarget={popupTarget}
+          />
+        </MapContainer>
+      </div>
     </>
   );
 }

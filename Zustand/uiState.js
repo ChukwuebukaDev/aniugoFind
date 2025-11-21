@@ -6,7 +6,7 @@ export const useUiStore = create((set) => ({
   loading: true,
   input: "",
   results: null,
-  closePoints: true,
+  closePoints: false,
   bouncingMarkers: [],
   popupTarget: null,
   offMap: false,

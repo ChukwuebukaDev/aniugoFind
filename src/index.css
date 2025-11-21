@@ -51,7 +51,7 @@ button {
 
 /* Popup tip arrow */
 .leaflet-popup-tip {
-  background: #1f2937 !important;
+  background: linear-gradient(to left, #4776e6, #8e54e9) !important;
 }
 
 /* Inner text wrapper */

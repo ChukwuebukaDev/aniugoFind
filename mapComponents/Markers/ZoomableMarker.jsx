@@ -42,11 +42,14 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
 
   // Auto-open popup
   useEffect(() => {
-    if (openPopup && markerRef.current) {
-      markerRef.current.openPopup();
-      map.flyTo([point.lat, point.lng], 12, { animate: true, duration: 1.5 });
-    }
-  }, [openPopup, map, point.lat, point.lng]);
+    const timeout = setTimeout(() => {
+      if (isClosest && markerRef.current) {
+        markerRef.current.openPopup();
+        map.flyTo([point.lat, point.lng], 12, { animate: true, duration: 1.5 });
+      }
+    }, 2000);
+    return () => clearTimeout(timeout);
+  }, [isClosest, map, point.lat, point.lng]);
 
   // 🚀 What happens after user confirms
   const handleConfirm = () => {
@@ -67,9 +70,15 @@ export default function ZoomableMarker({ point, isClosest, openPopup }) {
         <Popup>
           <div
             onClick={() => setShowConfirm(true)}
-            className="cursor-pointer font-medium"
+            className="cursor-pointer font-medium flex flex-col gap-1"
           >
-            {point.name}
+            <span>{point.name}</span>
+
+            {isClosest && (
+              <span className="mt-1 inline-block bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                Closest Location
+              </span>
+            )}
           </div>
         </Popup>
       </Marker>
