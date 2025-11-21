@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ---- API route ----
+// ---- API route for ORS directions ----
 app.get("/route", async (req, res) => {
   try {
     const { start, end } = req.query;
@@ -21,6 +21,7 @@ app.get("/route", async (req, res) => {
 
     const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${start}&end=${end}`;
 
+    // Node 18+ built-in fetch
     const response = await fetch(url);
     if (!response.ok) {
       const text = await response.text();
@@ -41,7 +42,8 @@ app.get("/route", async (req, res) => {
 // ---- Serve React build ----
 app.use(express.static(path.join(__dirname, "../build")));
 
-app.get("*", (req, res) => {
+// ---- Catch-all route for React ----
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "../build", "index.html"));
 });
 

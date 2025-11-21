@@ -3,20 +3,16 @@ export default function BackgroundEvents() {
   const {
     showInput,
     toggleShowInput,
-    autoCluster,
     isSidebarOpen,
     showImporter,
-    toggleAutoCluster,
     toggleShowImporter,
     toggleSidebar,
     closePoints,
     toggleClosePoints,
   } = useUiStore();
-  const state =
-    showInput || autoCluster || showImporter || closePoints || isSidebarOpen;
+  const state = showInput || showImporter || closePoints || isSidebarOpen;
   function toggleBackgroundEvents() {
     if (showInput) toggleShowInput();
-    if (autoCluster) toggleAutoCluster();
     if (isSidebarOpen) toggleSidebar();
     if (showImporter) toggleShowImporter();
     if (closePoints) toggleClosePoints();

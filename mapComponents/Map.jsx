@@ -1,9 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
-
-import "react-leaflet-cluster/dist/assets/MarkerCluster.default.css";
-import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
 import { motion, AnimatePresence } from "framer-motion";
 
 import UserLocationMarker from "./Markers/UserLocationMarker";
