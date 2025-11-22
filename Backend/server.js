@@ -1,22 +1,23 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fetch = require("node-fetch"); // IMPORTANT
 require("dotenv").config();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-app.options("*", cors());
+// ---- Force CORS headers ----
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  next();
+});
 
+app.use(cors());
 app.use(express.json());
 
-// ---- API route for ORS directions ----
+// ---- API route ----
 app.get("/route", async (req, res) => {
   try {
     const { start, end } = req.query;
@@ -32,23 +33,9 @@ app.get("/route", async (req, res) => {
 
     const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${start}&end=${end}`;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(url);
+    const data = await response.json();
 
-    const text = await response.text();
-
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: "ORS request failed",
-        details: text,
-      });
-    }
-
-    const data = JSON.parse(text);
     return res.json(data);
   } catch (err) {
     return res.status(500).json({
@@ -58,10 +45,10 @@ app.get("/route", async (req, res) => {
   }
 });
 
-// ---- Serve React build (Vite dist) ----
+// ---- Serve React build ----
 app.use(express.static(path.join(__dirname, "../dist")));
 
-// ---- Catch-all route for React ----
+// ---- Catch-all for React Router ----
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../dist", "index.html"));
 });
