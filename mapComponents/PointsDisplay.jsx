@@ -3,6 +3,7 @@ import { Navigation, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmModal from "../utilities/Notifications/ConfirmModal";
 import { getRoadDistance } from "../utilities/getRoadDistance";
+import { findClosestToStartRoad } from "../utilities/closestPairsCalculation";
 import { navigateToPoint } from "../utilities/navigationToPoint";
 import { getTotalDistance } from "../hooks/totalDistance";
 
@@ -26,6 +27,11 @@ export default function PointsDisplay({
     if (confirmPoint) deletePoint(points.indexOf(confirmPoint));
     setConfirmPoint(null);
   };
+
+  (async () => {
+    const result = await findClosestToStartRoad(points);
+    console.log(result);
+  })();
 
   const handleCancelDelete = () => setConfirmPoint(null);
 

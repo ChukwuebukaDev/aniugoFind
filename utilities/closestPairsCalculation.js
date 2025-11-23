@@ -1,12 +1,24 @@
 import { getRoadDistance } from "./getRoadDistance";
+
 async function findClosestToStartRoad(points) {
+  if (!points || points.length < 2) {
+    throw new Error("At least two points are required");
+  }
+
   const start = points[0];
   let minDistance = Infinity;
   let closest = null;
+  const distanceBox = [];
 
   for (let i = 1; i < points.length; i++) {
     try {
-      const distance = await getRoadDistance(start, points[i]);
+      const result = await getRoadDistance(start, points[i]);
+      if (!result) continue;
+
+      const { distance } = result;
+
+      // Store every distance for debugging
+      distanceBox.push({ point: points[i], distance });
 
       if (distance < minDistance) {
         minDistance = distance;
@@ -22,4 +34,5 @@ async function findClosestToStartRoad(points) {
     distance: minDistance,
   };
 }
+
 export { findClosestToStartRoad };
