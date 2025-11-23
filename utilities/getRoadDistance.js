@@ -1,6 +1,6 @@
-const BACKEND_URL = "https://aniugofind-production.up.railway.app/route";
+const BACKEND_URL = "https://aniugofind-backend.onrender.com/route";
 
-// Simple cache object
+// Simple cache object to avoid repeated API calls
 const routeCache = {};
 
 export async function getRoadDistance(pointA, pointB) {
@@ -9,18 +9,18 @@ export async function getRoadDistance(pointA, pointB) {
   const start = `${pointA.lng},${pointA.lat}`;
   const end = `${pointB.lng},${pointB.lat}`;
 
-  // Create a unique key for the route
+  // Unique key for caching
   const cacheKey = `${start}-${end}`;
 
-  // Return cached result if exists
+  // Return cached result if available
   if (routeCache[cacheKey]) {
     return routeCache[cacheKey];
   }
 
   try {
-    // Call the Railway backend
+    // Call the Render backend
     const res = await fetch(`${BACKEND_URL}?start=${start}&end=${end}`);
-    if (!res.ok) throw new Error("Backend request failed");
+    if (!res.ok) throw new Error(`Backend request failed: ${res.status}`);
 
     const data = await res.json();
 
