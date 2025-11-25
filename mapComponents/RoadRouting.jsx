@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Polyline, Tooltip } from "react-leaflet";
 import polyline from "@mapbox/polyline";
+import * as turf from "@turf/turf";
 import { getRoadDistance } from "../utilities/getRoadDistance";
 
 function formatDistance(meters) {
@@ -9,65 +10,89 @@ function formatDistance(meters) {
 }
 
 export default function RoadRouting({ points }) {
-  const [routes, setRoutes] = useState([]);
+  const [route, setRoute] = useState(null);
 
   useEffect(() => {
     if (!points || points.length < 2) return;
 
     let cancelled = false;
 
-    const computeRoutes = async () => {
-      const newRoutes = [];
+    const computeRoute = async () => {
+      try {
+        const start = points[0];
+        const startPoint = turf.point([start.lng, start.lat]);
 
-      for (let i = 0; i < points.length - 1; i++) {
-        const from = points[i];
-        const to = points[i + 1];
+        let closest = null;
+        let minDist = Infinity;
 
-        const result = await getRoadDistance(from, to);
-        if (!result?.geometry) continue;
+        // Find closest point using Turf
+        for (let i = 1; i < points.length; i++) {
+          const p = points[i];
+          const tp = turf.point([p.lng, p.lat]);
+          const dist = turf.distance(startPoint, tp, { units: "kilometers" });
 
-        // decode ORS geometry (polyline) → [[lat,lng], ...]
-        const decoded = polyline.decode(result.geometry);
-        if (!decoded || decoded.length === 0) continue;
+          if (dist < minDist) {
+            minDist = dist;
+            closest = p;
+          }
+        }
 
-        // convert to {lat,lng} objects for Leaflet
-        const coords = decoded.map(([lat, lng]) => ({ lat, lng }));
-        if (coords.length === 0) continue;
+        if (!closest) return;
+
+        // ORS route
+        const result = await getRoadDistance(start, closest);
+        if (!result) return;
+
+        let coords = [];
+
+        // ✅ If geometry is encoded polyline
+        if (typeof result.geometry === "string") {
+          coords = polyline
+            .decode(result.geometry)
+            .map(([lat, lng]) => [lat, lng]);
+        }
+
+        // ✅ If geometry is GeoJSON
+        if (result.geometry?.coordinates) {
+          coords = result.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+        }
+
+        if (!coords.length) {
+          console.warn("No route coords decoded");
+          return;
+        }
 
         const midpoint = coords[Math.floor(coords.length / 2)];
 
-        newRoutes.push({
-          coordinates: coords,
-          distance: result.distance,
-          midpoint,
-        });
+        if (!cancelled) {
+          setRoute({
+            coordinates: coords, // now [lat,lng]
+            distance: result.distance,
+            midpoint,
+          });
+        }
+      } catch (err) {
+        console.error("Route error:", err);
       }
-
-      if (!cancelled) setRoutes(newRoutes);
     };
 
-    computeRoutes();
+    computeRoute();
 
     return () => {
       cancelled = true;
     };
   }, [points]);
 
+  if (!route || !route.coordinates?.length) return null;
+
   return (
-    <>
-      {routes.map((route, idx) =>
-        route.coordinates && route.coordinates.length > 0 ? (
-          <Polyline
-            key={idx}
-            positions={route.coordinates}
-            pathOptions={{ color: "#1976d2", weight: 3 }}
-          >
-            <Tooltip permanent direction="center" offset={[0, -10]}>
-              {formatDistance(route.distance)}
-            </Tooltip>
-          </Polyline>
-        ) : null
-      )}
-    </>
+    <Polyline
+      positions={route.coordinates}
+      pathOptions={{ color: "dodgerblue", weight: 4 }}
+    >
+      <Tooltip permanent direction="center" offset={[0, -10]}>
+        {formatDistance(route.distance)}
+      </Tooltip>
+    </Polyline>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline } from "react-leaflet";
 import { motion, AnimatePresence } from "framer-motion";
 
 import UserLocationMarker from "./Markers/UserLocationMarker";
@@ -253,6 +253,7 @@ export default function CoordinateMap() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
           <RoadRouting points={points} />
+
           {offMap && <MapClickHandler setPoints={setAllPoints} />}
           <FitmapHandler markers={memoPoints} />
           {userLocation && <UserLocationMarker userLocation={userLocation} />}

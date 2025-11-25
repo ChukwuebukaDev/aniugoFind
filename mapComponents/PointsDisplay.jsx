@@ -28,11 +28,6 @@ export default function PointsDisplay({
     setConfirmPoint(null);
   };
 
-  (async () => {
-    const result = await findClosestToStartRoad(points);
-    console.log(result);
-  })();
-
   const handleCancelDelete = () => setConfirmPoint(null);
 
   const handlePointDistanceCalculations = async (p, i) => {
