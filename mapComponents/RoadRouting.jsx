@@ -91,7 +91,10 @@ export default function RoadRouting({ points }) {
       pathOptions={{ color: "dodgerblue", weight: 4 }}
     >
       <Tooltip permanent direction="center" offset={[0, -10]}>
-        {formatDistance(route.distance)}
+        <div className="bg-emerald-400 p-1 font-bold  flex flex-col items-center">
+          <strong>Closest Point</strong>
+          {formatDistance(route.distance)}
+        </div>
       </Tooltip>
     </Polyline>
   );
