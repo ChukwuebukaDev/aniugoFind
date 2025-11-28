@@ -1,10 +1,10 @@
 import ZoomableMarker from "./ZoomableMarker";
 import { useMap } from "react-leaflet";
 import { useEffect } from "react";
-import L from "leaflet";
 import "leaflet.markercluster";
 import { useAniugoBackgroundWatcher } from "../../utilities/useBackgroundWatcher.js";
 import ClosestPointToast from "../../utilities/Notifications/ClosestPointToast.jsx";
+import ClusterLayer from "../Cluster/Clusterlayer.jsx";
 export function MarkerLayer({
   points,
   autoCluster,
@@ -74,7 +74,27 @@ export function MarkerLayer({
 
   return (
     <>
-      {autoCluster ? <ClusteredMarkers /> : renderZoomableMarkers()}
+      {autoCluster ? (
+        <ClusterLayer
+          points={points}
+          renderMarker={(p, i) => {
+            const isClosest = isClosestMarker(p);
+            const isBouncing = bouncingMarkers.includes(p.name);
+
+            return (
+              <ZoomableMarker
+                key={p.name || `${p.lat}-${p.lng}-${i}`}
+                point={p}
+                isClosest={isClosest}
+                isBouncing={isBouncing}
+                openPopup={popupTarget === p.name}
+              />
+            );
+          }}
+        />
+      ) : (
+        renderZoomableMarkers()
+      )}
 
       <ClosestPointToast show={toast.show} message={toast.message} />
     </>

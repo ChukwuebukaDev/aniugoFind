@@ -86,16 +86,20 @@ export default function RoadRouting({ points }) {
   if (!route || !route.coordinates?.length) return null;
 
   return (
-    <Polyline
-      positions={route.coordinates}
-      pathOptions={{ color: "dodgerblue", weight: 4 }}
-    >
-      <Tooltip permanent direction="center" offset={[0, -10]}>
-        <div className="bg-emerald-400 p-1 font-bold  flex flex-col items-center">
-          <strong>Closest Point</strong>
-          {formatDistance(route.distance)}
-        </div>
-      </Tooltip>
-    </Polyline>
+    <>
+      {points?.length > 1 && (
+        <Polyline
+          positions={route.coordinates}
+          pathOptions={{ color: "dodgerblue", weight: 4 }}
+        >
+          <Tooltip permanent direction="center" offset={[0, -10]}>
+            <div className="bg-emerald-400 p-1 font-bold  flex flex-col items-center">
+              <strong>Closest Point</strong>
+              {formatDistance(route.distance)}
+            </div>
+          </Tooltip>
+        </Polyline>
+      )}
+    </>
   );
 }

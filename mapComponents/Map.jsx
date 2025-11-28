@@ -245,6 +245,7 @@ export default function CoordinateMap() {
           key={theme}
           center={[9.082, 8.6753]}
           zoom={6}
+          zoomControl={false}
           className="h-full"
           whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
         >

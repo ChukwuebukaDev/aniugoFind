@@ -30,7 +30,7 @@ export default function AniugoDefaultNavigationSystem() {
 
   // Show modal on mount
   useEffect(() => {
-    if (points?.length > 0) {
+    if (points?.length > 1) {
       setShow(true);
     }
   }, [points]);

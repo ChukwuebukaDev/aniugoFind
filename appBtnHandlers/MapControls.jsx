@@ -22,100 +22,118 @@ export function MapControls() {
     toggleSidebar,
     closePoints,
     toggleClosePoints,
+    darkTheme, // make sure this exists in your store
   } = useUiStore();
 
-  const [activeTooltip, setActiveTooltip] = useState(null);
   const [showMobileHint, setShowMobileHint] = useState(true);
+  const [openDrawer, setOpenDrawer] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setShowMobileHint(false), 4000); // hide hint after 4s
+    const t = setTimeout(() => setShowMobileHint(false), 4000);
     return () => clearTimeout(t);
   }, []);
 
   const controls = [
     {
       label: isSidebarOpen ? "Hide Saved" : "Show Saved",
-      icon: <FolderOpen size={18} />,
+      icon: <FolderOpen size={20} />,
       onClick: toggleSidebar,
     },
     {
       label: showImporter ? "Close Form" : "Upload Excel",
-      icon: <Upload size={18} />,
+      icon: <Upload size={20} />,
       onClick: toggleShowImporter,
     },
     {
       label: autoCluster ? "Stop Cluster" : "Auto Cluster",
-      icon: <Layers size={18} />,
+      icon: <Layers size={20} />,
       onClick: toggleAutoCluster,
     },
     {
       label: showInput ? "Close Input" : "Enter Points",
-      icon: <FileInput size={18} />,
+      icon: <FileInput size={20} />,
       onClick: toggleShowInput,
     },
     {
       label: closePoints ? "Hide Points" : "Show Points",
-      icon: <BookOpen size={18} />,
+      icon: <BookOpen size={20} />,
       onClick: toggleClosePoints,
     },
   ];
 
   return (
-    <div className="fixed left-2 top-1/3 z-[2000] flex flex-col gap-3 pointer-events-auto">
-      {controls.map((control, i) => (
-        <motion.div key={i} className="relative">
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.08, type: "spring", stiffness: 220 }}
-            whileHover={{ scale: 1.12 }}
-            whileTap={{ scale: 0.92 }}
-            onClick={() => {
-              control.onClick();
-              setActiveTooltip(i);
-              setTimeout(() => setActiveTooltip(null), 1500);
-            }}
-            className="group h-10 w-10 rounded-full bg-emerald-500 shadow-md backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-emerald-600 transition-all relative"
-          >
-            {control.icon}
-
-            {/* Pulse hint for mobile */}
-            {showMobileHint && i === 0 && (
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: [0.8, 1.2, 1], opacity: 1 }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  repeatType: "loop",
-                }}
-                className="absolute -top-2 -right-2 bg-red-500 rounded-full h-3 w-3"
-              />
-            )}
-          </motion.button>
-
-          {/* Tooltip */}
-          <span
-            className={`absolute left-12 px-2 py-1 rounded-md bg-neutral-900 text-white text-[10px] transition-opacity whitespace-nowrap shadow-lg ${
-              activeTooltip === i ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            {control.label}
-          </span>
-        </motion.div>
-      ))}
-
-      {/* Optional help icon on mobile */}
-      {showMobileHint && (
-        <motion.div
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 p-2 rounded-full bg-emerald-600 text-white shadow-lg flex items-center gap-1 text-xs"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+    <div className="fixed bottom-25 left-0 w-full z-[2000] flex justify-center pointer-events-none">
+      <motion.div
+        className={`w-full max-w-md rounded-t-2xl p-4 shadow-xl pointer-events-auto
+              border-t border-white/20
+              ${darkTheme ? "bg-neutral-900" : "bg-neutral-100"}`}
+        initial={{ y: 200 }} // start slightly below bottom
+        animate={{ y: openDrawer ? 100 : 200 }} // slide up to visible
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        {/* Drawer handle */}
+        <div
+          className="w-full flex justify-center mb-2 cursor-pointer"
+          onClick={() => setOpenDrawer(!openDrawer)}
         >
-          <HelpCircle size={14} />
-          Tap buttons to see controls
-        </motion.div>
-      )}
+          <div
+            className={`h-1.5 w-12 rounded-full ${
+              darkTheme ? "bg-gray-400" : "bg-gray-600"
+            }`}
+          ></div>
+        </div>
+
+        {/* Button grid */}
+        <div className="flex justify-between gap-4 px-2">
+          {controls.map((control, i) => (
+            <motion.div
+              key={i}
+              className="flex flex-col items-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08, type: "spring", stiffness: 220 }}
+            >
+              <button
+                onClick={control.onClick}
+                className={`flex items-center justify-center w-11 h-11
+                            rounded-full shadow-md border border-white/20
+                            transition-all ${
+                              darkTheme
+                                ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                                : "bg-emerald-400 hover:bg-emerald-500 text-black"
+                            }`}
+              >
+                {control.icon}
+              </button>
+              <span
+                className={`text-xs mt-1 text-center font-semibold ${
+                  darkTheme ? "text-white" : "text-black"
+                }`}
+              >
+                {control.label}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Optional mobile hint */}
+        {showMobileHint && (
+          <motion.div
+            className={`absolute bottom-3 left-1/2 -translate-x-1/2 p-2 rounded-full
+                        shadow-lg flex items-center gap-1 text-xs
+                        ${
+                          darkTheme
+                            ? "bg-emerald-600 text-white"
+                            : "bg-emerald-400 text-black"
+                        }`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <HelpCircle size={14} />
+            Tap buttons to see controls
+          </motion.div>
+        )}
+      </motion.div>
     </div>
   );
 }
