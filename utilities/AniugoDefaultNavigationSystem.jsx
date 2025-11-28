@@ -30,7 +30,9 @@ export default function AniugoDefaultNavigationSystem() {
 
   // Show modal on mount
   useEffect(() => {
-    setShow(true);
+    if (points?.length > 0) {
+      setShow(true);
+    }
   }, [points]);
 
   // Handle navigation with spinner
@@ -49,7 +51,7 @@ export default function AniugoDefaultNavigationSystem() {
   };
 
   return (
-    <div className="w-2/4 h-2/4 absolute top-0 topper flex flex-col items-center justify-center gap-4">
+    <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 z-[1500] pointer-events-none">
       <ConfirmModal
         show={show}
         onCancel={() => setShow(false)}
@@ -64,8 +66,9 @@ export default function AniugoDefaultNavigationSystem() {
             "Proceed"
           )
         }
-        message="Would you like Aniugo Find to Help navigate your points?"
+        message="Would you like Aniugo Find to help navigate your points?"
         disabled={loadingClosest || loadingNavigate}
+        className="w-full max-w-md sm:max-w-lg" // responsive modal width
       />
     </div>
   );

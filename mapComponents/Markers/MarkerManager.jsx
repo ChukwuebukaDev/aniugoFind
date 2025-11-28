@@ -1,5 +1,6 @@
 import ZoomableMarker from "./ZoomableMarker";
 import { useMap } from "react-leaflet";
+import { useEffect } from "react";
 import L from "leaflet";
 import "leaflet.markercluster";
 import { useAniugoBackgroundWatcher } from "../../utilities/useBackgroundWatcher.js";

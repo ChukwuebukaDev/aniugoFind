@@ -34,7 +34,8 @@ export default function ConfirmModal({
         <motion.div
           key="confirmOverlay"
           ref={modalRef}
-          className="absolute inset-0 flex items-center justify-center z-[2000] backdrop-blur-sm bg-black/40"
+          className="absolute inset-0 flex items-center justify-center 
+           pointer-events-none backdrop-blur-sm bg-black/40 z-[2000]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -47,8 +48,8 @@ export default function ConfirmModal({
             exit={{ y: 20, opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="w-[90%] max-w-md p-6 rounded-2xl shadow-2xl 
-                       bg-white/95 dark:bg-gray-900/95 border border-gray-300 
-                       dark:border-gray-700 text-center"
+           bg-white/95 dark:bg-gray-900/95 border border-gray-300 
+           dark:border-gray-700 text-center pointer-events-auto"
           >
             {/* Title */}
             <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-gray-100">
