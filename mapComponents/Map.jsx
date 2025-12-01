@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import UserLocationMarker from "./Markers/UserLocationMarker";
 import {
-  MapClickHandler,
   MarkerBounce,
   MarkerLayer,
   RoadRouting,
   FitmapHandler,
+  LocateControl,
 } from "../mapComponents";
 import { findClosestToStartRoad } from "../utilities/closestPairsCalculation";
 import TextArea from "../components/TextAreaContainer";
@@ -255,7 +255,6 @@ export default function CoordinateMap() {
           />
           <RoadRouting points={points} />
 
-          {offMap && <MapClickHandler setPoints={setAllPoints} />}
           <FitmapHandler markers={memoPoints} />
           {userLocation && <UserLocationMarker userLocation={userLocation} />}
           <MarkerLayer
@@ -265,6 +264,7 @@ export default function CoordinateMap() {
             isClosestMarker={isClosestMarker}
             popupTarget={popupTarget}
           />
+          <LocateControl />
         </MapContainer>
       </div>
     </>

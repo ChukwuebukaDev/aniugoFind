@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useMap, Marker, Circle } from "react-leaflet";
-import L from "leaflet";
+import { useMap, Circle } from "react-leaflet";
 
 function LocateControl() {
   const map = useMap();
@@ -34,22 +33,13 @@ function LocateControl() {
     <>
       {userLocation && (
         <>
-          <Marker
-            position={userLocation}
-            icon={L.icon({
-              iconUrl:
-                "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-            })}
-          />
           <Circle center={userLocation} radius={100} />
         </>
       )}
 
       <button
         onClick={handleLocate}
-        className={`cursor-pointer fixed md:absolute top-auto left-auto bottom-6 right-5 z-[1000] rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all duration-500 ${
+        className={`cursor-pointer fixed md:absolute top-auto left-auto bottom-35 right-1 z-[1000] rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all duration-500 ${
           pulsing ? "pulse" : ""
         }`}
         title="Find My Location"

@@ -17,7 +17,8 @@ export default function Header() {
         >
           {theme === "dark" ? "🌙" : "☀️"}
         </button>
-        <HeaderNav />
+        {/* The nav links will be reserved when a user log in  */}
+        {/* <HeaderNav /> */}
       </div>
     </header>
   );
