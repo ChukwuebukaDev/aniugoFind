@@ -1,8 +1,23 @@
 import { useState } from "react";
 import { ClipLoader } from "react-spinners";
-import { filterSiteId } from "../utilities/siteIdFiltering";
 import { motion, AnimatePresence } from "framer-motion";
 import useDarkMode from "../Themes/useDarkMode";
+
+/**
+ * Extract IHS Site ID and coordinates from free text
+ */
+const extractSiteAndCoords = (line) => {
+  const siteMatch = line.match(/IHS_[A-Z0-9_]+/i);
+  const coordMatch = line.match(/(-?\d+(\.\d+)?)\s*[,\s]\s*(-?\d+(\.\d+)?)/);
+
+  if (!coordMatch) return null;
+
+  return {
+    name: siteMatch ? siteMatch[0] : undefined,
+    lat: parseFloat(coordMatch[1]),
+    lng: parseFloat(coordMatch[3]),
+  };
+};
 
 const CalculateAndClearBtn = ({
   input,
@@ -14,172 +29,145 @@ const CalculateAndClearBtn = ({
 }) => {
   const [processing, setProcessing] = useState(false);
   const [warning, setWarning] = useState(false);
+  const [error, setError] = useState(null);
+
   const [theme] = useDarkMode();
   const isDark = theme === "dark";
 
   const handleCalculate = () => {
     const trimmed = input.trim();
 
-    // 🔸 If user hasn't entered anything, show temporary warning
+    // Empty input
     if (!trimmed) {
       setWarning(true);
       setTimeout(() => setWarning(false), 2500);
       return;
     }
 
+    setError(null);
+
     try {
       const lines = trimmed
         .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
+        .map((l) => l.trim())
+        .filter(Boolean);
 
-      // 🔹 Parse each line: allow both “with” and “without” site IDs
-      const manualCoords = lines
-        .filter((line) => !/Starting\s*Point/i.test(line))
-        .map((line, idx) => {
-          const parsed = filterSiteId(line);
+      const extractedPoints = lines.map((line, idx) => {
+        const extracted = extractSiteAndCoords(line);
 
-          // If filterSiteId fails, try to extract plain coordinates
-          let coords = parsed?.coords;
-          let name = parsed?.name;
+        if (!extracted) {
+          throw new Error(`Invalid format: "${line}"`);
+        }
 
-          if (!coords) {
-            const match = line.match(/(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)/);
-            if (match) {
-              coords = { lat: parseFloat(match[1]), lng: parseFloat(match[3]) };
-              name = `Manual Point ${idx + 1}`;
-            }
-          }
+        return {
+          lat: extracted.lat,
+          lng: extracted.lng,
+          name: extracted.name || `Manual Point ${idx + 1}`,
+        };
+      });
 
-          if (!coords) throw new Error(`Invalid coordinate format: "${line}"`);
+      // Preserve starting location if it exists
+      const startingPoint = points.length > 0 ? points[0] : null;
 
-          return {
-            lat: coords.lat,
-            lng: coords.lng,
-            name: name || `Manual Point ${idx + 1}`,
-          };
-        });
-
-      // 🔹 Deduplicate & merge with current location
-      const currentLocation = points.length > 0 ? points[0] : null;
-      const mergedPoints = currentLocation
+      const mergedPoints = startingPoint
         ? [
-            currentLocation,
-            ...manualCoords.filter(
+            startingPoint,
+            ...extractedPoints.filter(
               (p) =>
-                !(
-                  p.lat === currentLocation.lat && p.lng === currentLocation.lng
-                )
+                !(p.lat === startingPoint.lat && p.lng === startingPoint.lng)
             ),
           ]
-        : manualCoords;
+        : extractedPoints;
 
-      // 🔹 Remove duplicates between manual points
+      // Remove duplicates
       const uniquePoints = mergedPoints.filter(
-        (point, index, self) =>
-          index ===
-          self.findIndex((p) => p.lat === point.lat && p.lng === point.lng)
+        (p, i, self) =>
+          i === self.findIndex((x) => x.lat === p.lat && x.lng === p.lng)
       );
 
-      // 🔹 Simulate processing + trigger map update
       setProcessing(true);
+
       setTimeout(() => {
         setPoints(uniquePoints);
         calculateResults(uniquePoints);
         setProcessing(false);
         setShowInput(false);
-        setError(null);
-      }, 800);
+      }, 700);
     } catch (err) {
-      // 🔸 Instead of alert, show an inline error message
-      setError(err.message);
-      clearAll();
       setProcessing(false);
-
-      // Auto-clear error after a few seconds
+      setError(err.message || "Unable to parse input");
       setTimeout(() => setError(null), 4000);
     }
   };
 
   return (
     <div className="flex flex-col items-center gap-3 mt-3 relative w-full">
-      {/* ⚠️ Animated Warning */}
+      {/* Warning */}
       <AnimatePresence>
         {warning && (
           <motion.div
-            key="warning"
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: [1, 1.05, 1],
-              x: [0, -10, 10, -6, 6, 0],
-            }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{
-              duration: 0.6,
-              ease: "easeInOut",
-            }}
-            className="text-red-400 text-sm font-medium bg-red-800/20 dark:bg-red-500/10 border border-red-400/30 px-3 py-1 rounded-md mb-1"
+            className="text-red-400 text-sm bg-red-800/20 px-3 py-1 rounded-md"
           >
-            ⚠️ Please enter at least one coordinate first!
+            ⚠️ Please enter at least one site or coordinate
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Buttons Row */}
-      <div className="flex justify-center items-center gap-3 relative">
-        {/* Pulsing glow while processing */}
+      {/* Error */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="text-red-500 text-sm bg-red-900/20 border border-red-500/30 px-3 py-1 rounded-md"
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Buttons */}
+      <div className="flex gap-3 relative">
         {processing && (
           <motion.div
             className="absolute inset-0 flex justify-center"
-            initial={{ opacity: 0.6, scale: 1 }}
-            animate={{ opacity: [0.6, 0.2, 0.6], scale: [1, 1.15, 1] }}
-            transition={{
-              repeat: Infinity,
-              duration: 1.5,
-              ease: "easeInOut",
-            }}
+            animate={{ opacity: [0.5, 0.2, 0.5] }}
+            transition={{ repeat: Infinity, duration: 1.4 }}
           >
             <div
               className={`w-36 h-10 rounded-full blur-xl ${
                 isDark ? "bg-emerald-500/40" : "bg-emerald-400/40"
               }`}
-            ></div>
+            />
           </motion.div>
         )}
 
-        {/* Calculate Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           disabled={processing}
           onClick={handleCalculate}
-          className={`relative flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-semibold backdrop-blur-md shadow-lg border transition-all duration-500 ${
+          className={`px-5 py-2.5 rounded-full font-semibold shadow-lg border ${
             isDark
-              ? "bg-emerald-600/70 border-emerald-400/30 text-white hover:bg-emerald-500/70"
-              : "bg-emerald-500/80 border-emerald-700/20 text-white hover:bg-emerald-600/90"
+              ? "bg-emerald-600/70 text-white"
+              : "bg-emerald-500/80 text-white"
           } disabled:opacity-60 z-10`}
         >
-          {processing && <ClipLoader size={20} color="#fff" />}
-          <span>{processing ? "Processing..." : "Calculate"}</span>
+          {processing && <ClipLoader size={18} color="#fff" />}
+          {processing ? "Processing..." : "Calculate"}
         </motion.button>
 
-        {/* Clear Button */}
         <motion.button
-          whileHover={{
-            scale: 1.05,
-            boxShadow: isDark
-              ? "0 0 20px rgba(239, 68, 68, 0.6)"
-              : "0 0 20px rgba(239, 68, 68, 0.4)",
-          }}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           disabled={processing}
           onClick={clearAll}
-          className={`px-5 py-2.5 rounded-full font-semibold backdrop-blur-md shadow-lg border transition-all duration-500 ${
-            isDark
-              ? "bg-red-600/70 border-red-400/30 text-white hover:bg-red-500/70"
-              : "bg-red-500/80 border-red-700/20 text-white hover:bg-red-600/90"
+          className={`px-5 py-2.5 rounded-full font-semibold shadow-lg border ${
+            isDark ? "bg-red-600/70 text-white" : "bg-red-500/80 text-white"
           } disabled:opacity-60 z-10`}
         >
           Clear All

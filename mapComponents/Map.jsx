@@ -58,7 +58,6 @@ export default function CoordinateMap() {
   const [popupTarget, setPopupTarget] = useState(null);
   const [input, setInput] = useState("");
   const [importLoading, setImportLoading] = useState(false);
-  const [offMap, setOffMap] = useState(false);
 
   const lightUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
   const darkUrl =
@@ -245,7 +244,7 @@ export default function CoordinateMap() {
           key={theme}
           center={[9.082, 8.6753]}
           zoom={6}
-          zoomControl={false}
+          //zoomControl={false}
           className="h-full"
           whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
         >
