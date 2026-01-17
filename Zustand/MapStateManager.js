@@ -1,5 +1,13 @@
 import { create } from "zustand";
 
+/* ---------------------------------------------
+   Utilities
+--------------------------------------------- */
+
+// Safe ID generator
+const generateId = () =>
+  crypto.randomUUID?.() ?? Math.random().toString(36).slice(2);
+
 // Load saved points safely
 const loadSavedPoints = () => {
   try {
@@ -11,115 +19,173 @@ const loadSavedPoints = () => {
   }
 };
 
+// Normalize every point (guarantees arrival + id)
+const normalizePoint = (point, overrides = {}) => ({
+  id: point.id ?? generateId(),
+  lat: point.lat,
+  lng: point.lng,
+  name: point.name,
+  isUser: !!point.isUser,
+  arrival: point.isUser ? "arrived" : "pending",
+  ...overrides,
+});
+
+/* ---------------------------------------------
+   Store
+--------------------------------------------- */
+
 export const usePointsStore = create((set, get) => ({
   // ---------- STATE ----------
   points: loadSavedPoints(),
   userLocation: null,
 
-  // ---------- INTERNAL UTILS ----------
+  // ---------- INTERNAL ----------
   _persist() {
-    const { points } = get();
-    localStorage.setItem("aniugo_points", JSON.stringify(points));
+    localStorage.setItem("aniugo_points", JSON.stringify(get().points));
   },
 
-  _injectUserPoint(newPoints) {
+  _injectUserPoint(points) {
     const user = get().userLocation;
-    if (!user) return newPoints;
-    const filtered = newPoints.filter((p) => !p.isUser);
-    return [user, ...filtered];
+    if (!user) return points;
+
+    const normalizedUser = normalizePoint(user, {
+      isUser: true,
+      arrival: "arrived",
+    });
+
+    return [normalizedUser, ...points.filter((p) => !p.isUser)];
   },
 
   // ---------- ACTIONS ----------
   setUserLocation(location) {
-    set({ userLocation: location });
+    const normalized = normalizePoint(location, {
+      isUser: true,
+      arrival: "arrived",
+    });
 
-    // Update points to place user at index 0
-    const { points, _injectUserPoint, _persist } = get();
-    const reordered = _injectUserPoint(points);
-    set({ points: reordered });
+    set({ userLocation: normalized });
 
-    _persist();
+    set((state) => ({
+      points: state._injectUserPoint(state.points),
+    }));
+
+    get()._persist();
   },
 
-  addPoint(lat, lng) {
+  addPoint(lat, lng, name) {
     if (isNaN(lat) || isNaN(lng)) return;
 
-    const { points, _injectUserPoint, _persist } = get();
+    set((state) => {
+      const exists = state.points.some((p) => p.lat === lat && p.lng === lng);
+      if (exists) return state;
 
-    const exists = points.some((p) => p.lat === lat && p.lng === lng);
-    if (exists) return;
+      const point = normalizePoint({ lat, lng, name });
 
-    const newPoints = [...points, { lat, lng }];
-    set({ points: _injectUserPoint(newPoints) });
+      return {
+        points: state._injectUserPoint([...state.points, point]),
+      };
+    });
 
-    _persist();
+    get()._persist();
   },
 
-  removePoint(index) {
-    const { points, _injectUserPoint, _persist } = get();
+  removePoint(id) {
+    set((state) => ({
+      points: state._injectUserPoint(
+        state.points.filter((p) => p.id !== id && !p.isUser),
+      ),
+    }));
 
-    const filtered = points.filter((p, i) => i !== index && !p.isUser);
-    const reordered = _injectUserPoint(filtered);
-
-    set({ points: reordered });
-    _persist();
+    get()._persist();
   },
 
   clearPoints() {
-    const { userLocation, _persist } = get();
-    set({ points: userLocation ? [userLocation] : [] });
-
-    _persist();
+    const user = get().userLocation;
+    set({ points: user ? [user] : [] });
+    get()._persist();
   },
 
   setAllPoints(newPoints) {
-    const { _injectUserPoint, _persist } = get();
+    const normalized = newPoints
+      .filter(
+        (p) =>
+          typeof p.lat === "number" &&
+          typeof p.lng === "number" &&
+          !isNaN(p.lat) &&
+          !isNaN(p.lng),
+      )
+      .map((p) => normalizePoint(p));
 
-    const valid = newPoints.filter(
-      (p) =>
-        typeof p.lat === "number" &&
-        typeof p.lng === "number" &&
-        !isNaN(p.lat) &&
-        !isNaN(p.lng)
-    );
+    set((state) => ({
+      points: state._injectUserPoint(normalized),
+    }));
 
-    set({ points: _injectUserPoint(valid) });
-    _persist();
+    get()._persist();
   },
 
+  // ---------- ARRIVAL ----------
+  markArrived(id) {
+    set((state) => ({
+      points: state.points.map((p) =>
+        p.id === id && !p.isUser ? { ...p, arrival: "arrived" } : p,
+      ),
+    }));
+
+    get()._persist();
+  },
+
+  markPending(id) {
+    set((state) => ({
+      points: state.points.map((p) =>
+        p.id === id && !p.isUser ? { ...p, arrival: "pending" } : p,
+      ),
+    }));
+
+    get()._persist();
+  },
+
+  markAllArrived() {
+    set((state) => ({
+      points: state.points.map((p) =>
+        p.isUser ? p : { ...p, arrival: "arrived" },
+      ),
+    }));
+
+    get()._persist();
+  },
+
+  // ---------- GEO ----------
   refreshUserLocation() {
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude, longitude } = pos.coords;
-
-        const user = {
-          lat: latitude,
-          lng: longitude,
+        get().setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
           name: "Starting point",
           isUser: true,
-        };
-
-        get().setUserLocation(user);
+        });
       },
-      (err) => console.warn("Error refreshing location:", err),
-      { enableHighAccuracy: true, timeout: 15000 }
+      (err) => console.warn("Geolocation error:", err),
+      { enableHighAccuracy: true, timeout: 15000 },
     );
   },
 }));
 
-// ----- Auto-run user location on first import -----
+/* ---------------------------------------------
+   Auto-run user location (unchanged behavior)
+--------------------------------------------- */
+
 navigator.geolocation?.getCurrentPosition(
   (pos) => {
-    const { latitude, longitude } = pos.coords;
     usePointsStore.getState().setUserLocation({
-      lat: latitude,
-      lng: longitude,
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
       name: "Starting point",
       isUser: true,
     });
   },
   (err) => console.warn("Error getting user location:", err),
-  { enableHighAccuracy: true, timeout: 15000 }
+  { enableHighAccuracy: true, timeout: 15000 },
 );

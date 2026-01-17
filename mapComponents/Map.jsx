@@ -101,7 +101,7 @@ export default function CoordinateMap() {
             Math.abs(p.lng - a.lng) < 1e-5) ||
           (b &&
             Math.abs(p.lat - b.lat) < 1e-5 &&
-            Math.abs(p.lng - b.lng) < 1e-5)
+            Math.abs(p.lng - b.lng) < 1e-5),
       );
 
       setBouncingMarkers(bouncing.map((m) => m.name));
@@ -127,9 +127,9 @@ export default function CoordinateMap() {
   const isClosestMarker = useCallback(
     (p) =>
       results?.closestPair?.some(
-        (c) => Math.abs(c.lat - p.lat) < 1e-6 && Math.abs(c.lng - p.lng) < 1e-6
+        (c) => Math.abs(c.lat - p.lat) < 1e-6 && Math.abs(c.lng - p.lng) < 1e-6,
       ),
-    [results]
+    [results],
   );
 
   const clearAll = useCallback(() => {
@@ -150,7 +150,7 @@ export default function CoordinateMap() {
     setTimeout(() => setClosePoints(false), 400);
     map.flyTo([lat, lng], 12, { animate: true, duration: 1.2 });
     window.dispatchEvent(
-      new CustomEvent("zoomToMarker", { detail: { lat, lng } })
+      new CustomEvent("zoomToMarker", { detail: { lat, lng } }),
     );
   };
 
@@ -169,9 +169,9 @@ export default function CoordinateMap() {
           setTimeout(
             () =>
               window.dispatchEvent(
-                new CustomEvent("fitToMarkers", { detail: savedCoords })
+                new CustomEvent("fitToMarkers", { detail: savedCoords }),
               ),
-            100
+            100,
           );
         }}
       />
@@ -198,9 +198,9 @@ export default function CoordinateMap() {
                       window.dispatchEvent(
                         new CustomEvent("fitToMarkers", {
                           detail: importedPoints,
-                        })
+                        }),
                       ),
-                    100
+                    100,
                   );
                 }}
                 setShowImporter={toggleShowImporter}
@@ -225,7 +225,6 @@ export default function CoordinateMap() {
           <PointsDisplay
             closePoints={closePoints}
             deletePoint={deletePoint}
-            points={points}
             zoomToPoint={zoomToPoint}
             setPopupTarget={setPopupTarget}
           />
