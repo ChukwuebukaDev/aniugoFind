@@ -19,12 +19,13 @@ const loadSavedPoints = () => {
   }
 };
 
-// Normalize every point (guarantees arrival + id)
+// Normalize every point (guarantees arrival + id + optional siteId)
 const normalizePoint = (point, overrides = {}) => ({
   id: point.id ?? generateId(),
   lat: point.lat,
   lng: point.lng,
   name: point.name,
+  siteId: point.siteId ?? null, // ✅ REQUIRED FOR EXCEL MATCHING
   isUser: !!point.isUser,
   arrival: point.isUser ? "arrived" : "pending",
   ...overrides,
@@ -72,14 +73,14 @@ export const usePointsStore = create((set, get) => ({
     get()._persist();
   },
 
-  addPoint(lat, lng, name) {
+  addPoint(lat, lng, name, siteId = null) {
     if (isNaN(lat) || isNaN(lng)) return;
 
     set((state) => {
       const exists = state.points.some((p) => p.lat === lat && p.lng === lng);
       if (exists) return state;
 
-      const point = normalizePoint({ lat, lng, name });
+      const point = normalizePoint({ lat, lng, name, siteId });
 
       return {
         points: state._injectUserPoint([...state.points, point]),
