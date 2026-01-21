@@ -58,10 +58,10 @@ export default function ExcelCompareImporter() {
           onClick={() => setIsOpen(true)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="fixed top-50 left-0 z-[1000] flex items-center gap-2 rounded-r-full bg-emerald-700 px-4 py-2 text-white shadow-lg hover:bg-emerald-600 md:hidden"
+          className=" z-[1000] fixed right-0 top-20 flex items-center gap-2 rounded-l-full bg-emerald-700 px-4 p-1 text-white shadow-lg hover:bg-emerald-600 md:hidden"
         >
           <FileSpreadsheet size={18} />
-          <span className="text-sm font-medium">Extract Access Ref</span>
+          <span className="text-sm font-medium">Access Ref</span>
         </motion.button>
       )}
 

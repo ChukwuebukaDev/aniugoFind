@@ -8,9 +8,9 @@ export default function Main() {
     <main className="relative flex-1">
       <CoordinateMap />
       <MapControls />
-      <ClearAllPointsButton />
       <BackgroundEvents />
       <ExcelCompareImporter />
+      <ClearAllPointsButton />
     </main>
   );
 }

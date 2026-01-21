@@ -17,16 +17,16 @@ export default function ClearAllPointsButton() {
   return (
     <>
       {points.length > 1 && (
-        <div className="fixed bottom-15 left-0 z-[1000] flex flex-col items-start gap-2">
+        <div className=" z-[1000] flex flex-col items-start gap-2">
           {/* Main Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowConfirm(true)}
-            className="flex items-center gap-2 rounded-r-full bg-red-600 px-4 py-2 text-white shadow-lg hover:bg-red-700"
+            className="flex fixed left-0 z-[1000] bottom-15 items-center gap-2 rounded-r-full bg-red-600 px-4 py-1 text-white shadow-lg hover:bg-red-700"
           >
             <Trash2 size={18} />
-            <span className="font-medium">Clear All Points</span>
+            <span className="">Clear Points</span>
           </motion.button>
 
           {/* Confirmation Box */}

@@ -1,5 +1,4 @@
 import useDarkMode from "../Themes/useDarkMode";
-import HeaderNav from "./HeaderNav";
 
 export default function Header() {
   const [theme, toggleTheme] = useDarkMode();
