@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -17,13 +15,13 @@ export default function ClearAllPointsButton() {
   return (
     <>
       {points.length > 1 && (
-        <div className=" z-[1000] flex flex-col items-start gap-2">
+        <div className=" z-[3000] fixed bottom-0 flex flex-col items-start gap-2">
           {/* Main Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowConfirm(true)}
-            className="flex fixed left-0 z-[1000] bottom-15 items-center gap-2 rounded-r-full bg-red-600 px-4 py-1 text-white shadow-lg hover:bg-red-700"
+            className="flex fixed left-0 z-[1000] bottom-5 items-center gap-2 rounded-r-full bg-red-600 px-4 py-1 text-white shadow-lg hover:bg-red-700"
           >
             <Trash2 size={18} />
             <span className="">Clear Points</span>
@@ -35,7 +33,7 @@ export default function ClearAllPointsButton() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="mt-2 w-[220px] rounded bg-white p-3 text-black shadow-lg"
+              className="mt-2 w-[220px] toppest rounded bg-white p-3 text-black shadow-lg"
             >
               <p className="mb-2 text-sm font-medium">
                 Are you sure you want to clear all points? This cannot be
