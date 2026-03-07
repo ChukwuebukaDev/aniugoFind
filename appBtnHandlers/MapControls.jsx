@@ -1,23 +1,21 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { HelpCircle ,X} from "lucide-react";
+import { HelpCircle, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useUiStore } from "../Zustand/uiState";
 
 export function MapControls() {
+
   const {
-    showInput,
-    toggleShowInput,
-    autoCluster,
     isSidebarOpen,
     showImporter,
-    toggleAutoCluster,
-    toggleShowImporter,
-    toggleSidebar,
+    autoCluster,
+    showInput,
     closePoints,
-    toggleClosePoints,
     darkTheme,
+    activeControl,
+    toggleControl,
   } = useUiStore();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -31,91 +29,105 @@ export function MapControls() {
   const controls = useMemo(
     () => [
       {
+        id: "sidebar",
         label: isSidebarOpen ? "Hide Saved" : "Show Saved",
-        icon: <img src="images/memory.png" />,
-        onClick: toggleSidebar,
-        active: isSidebarOpen,
+        icon: <img src="images/memory.png" className="w-6 h-6" />,
       },
       {
+        id: "importer",
         label: showImporter ? "Close Form" : "Upload Excel",
-        icon: <img src="images/excel.png" />,
-        onClick: toggleShowImporter,
-        active: showImporter,
+        icon: <img src="images/excel.png" className="w-6 h-6" />,
       },
       {
+        id: "cluster",
         label: autoCluster ? "Stop Cluster" : "Auto Cluster",
-        icon: <img src="images/cluster.png" />,
-        onClick: toggleAutoCluster,
-        active: autoCluster,
+        icon: <img src="images/cluster.png" className="w-6 h-6" />,
       },
       {
+        id: "input",
         label: showInput ? "Close Input" : "Enter Points",
-        icon: <img src="images/input.png" />,
-        onClick: toggleShowInput,
-        active: showInput,
+        icon: <img src="images/input.png" className="w-6 h-6" />,
       },
       {
+        id: "points",
         label: closePoints ? "Show Points" : "Hide Points",
-        icon: <img src="images/bulk.png" />,
-        onClick: toggleClosePoints,
-        active: !closePoints,
+        icon: <img src="images/bulk.png" className="w-6 h-6" />,
       },
     ],
     [isSidebarOpen, showImporter, autoCluster, showInput, closePoints]
   );
 
+  const handleMenuToggle = () => {
+    setDrawerOpen((v) => !v);
+  };
+
   return (
-    <>
-      {/* Central Menu Button */}
- <div className="fixed inset-0 flex items-center justify-start z-[2000] pointer-events-none">
-       <motion.button
-    onClick={() => setDrawerOpen((v) => !v)}
-    className="pointer-events-auto w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white text-lg font-bold transition-colors
-      bg-emerald-500 hover:bg-emerald-400"
-    whileTap={{ scale: 0.95 }}
-    whileHover={{ scale: 1.05 }}
-  >
-    {!drawerOpen ? '☰' : <X size={18}/>}
-  </motion.button>
+    <div className="fixed inset-0 flex items-center justify-start z-[2000] pointer-events-none">
 
-        {/* Controls Sliding Out */}
-        <div className="absolute flex flex-col items-center gap-3 pointer-events-auto">
-         {controls.map((c, i) => (
-    <motion.button
-      key={c.label}
-      initial={{ opacity: 0, y: 0 }}
-      animate={{
-        opacity: drawerOpen ? 1 : 0,
-        x: drawerOpen ? (i + 1) * 70 : 0, 
-         y: drawerOpen ? 70 * (i % 3) - 70 : 0,
-        scale: drawerOpen ? 1 : 0.8,
-      }}
-      transition={{ type: "spring", stiffness: 300, damping: 20, delay: i * 0.05 }}
-      onClick={c.onClick}
-      className="pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center border border-white/20 shadow-md transition-colors active:scale-95 bg-white text-black"
-      style={{
-        position: "absolute", // this makes them stack around the center button
-      }}
-    >
-      {c.icon}
-    </motion.button>
-  ))}
-        </div>
+      {/* Menu Button */}
+      <motion.button
+        onClick={handleMenuToggle}
+        className="pointer-events-auto ml-4 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white text-lg font-bold bg-emerald-500 hover:bg-emerald-400"
+        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+      >
+        {drawerOpen ? <X size={20} /> : "☰"}
+      </motion.button>
 
-        {/* Mobile Hint */}
-        {showHint && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`absolute -top-20 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-1 ${
-              darkTheme ? "bg-emerald-600 text-white" : "bg-emerald-400 text-black"
-            }`}
+      {/* Controls */}
+      {controls.map((control, i) => {
+
+        const active = activeControl === control.id;
+
+        return (
+          <motion.button
+            key={control.id}
+            initial={{ opacity: 0, x: 0 }}
+            animate={{
+              opacity: drawerOpen ? 1 : 0,
+              x: drawerOpen ? 90 : 0,
+              y: drawerOpen ? (i - 2) * 70 : 0,
+              scale: drawerOpen ? 1 : 0.7,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+              delay: i * 0.05,
+            }}
+            onClick={() => toggleControl(control.id)}
+            className={`pointer-events-auto absolute w-14 h-14 rounded-full flex items-center justify-center border shadow-md transition-all
+              
+              ${
+                active
+                  ? "bg-emerald-500 text-white shadow-emerald-400/50"
+                  : darkTheme
+                  ? "bg-neutral-800 text-white"
+                  : "bg-white text-black"
+              }
+
+            `}
           >
-            <HelpCircle size={14} />
-            Tap ☰ to open controls
-          </motion.div>
-        )}
-      </div>
-    </>
+            {control.icon}
+          </motion.button>
+        );
+      })}
+
+      {/* Hint */}
+      {showHint && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`absolute left-28 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-1 ${
+            darkTheme
+              ? "bg-emerald-600 text-white"
+              : "bg-emerald-400 text-black"
+          }`}
+        >
+          <HelpCircle size={14} />
+          Tap ☰ to open controls
+        </motion.div>
+      )}
+    </div>
   );
 }

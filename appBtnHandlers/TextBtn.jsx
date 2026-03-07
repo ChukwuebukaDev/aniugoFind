@@ -91,7 +91,7 @@ const CalculateAndClearBtn = ({
         setPoints(uniquePoints);
         calculateResults(uniquePoints);
         setProcessing(false);
-        setShowInput(false);
+        setShowInput('input');
       }, 700);
     } catch (err) {
       setProcessing(false);

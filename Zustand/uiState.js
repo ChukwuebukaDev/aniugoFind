@@ -28,14 +28,19 @@ export const useUiStore = create((set) => ({
   setImportLoading: (val) => set({ importLoading: val }),
   setAutoCluster: (val) => set({ autoCluster: val }),
 
-  // ---------- TOGGLE ACTIONS ----------
-  toggleSidebar: () =>
-    set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
-  toggleClosePoints: () =>
-    set((state) => ({ closePoints: !state.closePoints })),
-  toggleAutoCluster: () =>
-    set((state) => ({ autoCluster: !state.autoCluster })),
-  toggleShowImporter: () =>
-    set((state) => ({ showImporter: !state.showImporter })),
-  toggleShowInput: () => set((state) => ({ showInput: !state.showInput })),
+  activeControl:null,
+toggleControl: (control) =>
+  set((state) => {
+    const next = state.activeControl === control ? null : control;
+
+    return {
+      activeControl: next,
+
+      showInput: next === "input",
+      showImporter: next === "importer",
+      autoCluster: next === "cluster",
+      isSidebarOpen: next === "sidebar",
+      closePoints: next === "points",
+    };
+  }),
 }));

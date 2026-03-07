@@ -42,6 +42,7 @@ export default function CoordinateMap() {
     autoCluster,
     showImporter,
     toggleSidebar,
+    toggleControl,
     setLoading,
     setResults,
     closePoints,
@@ -162,7 +163,7 @@ export default function CoordinateMap() {
 
       <SavedCoordinatesSidebar
         isOpen={isSidebarOpen}
-        onClose={toggleSidebar}
+        onClose={toggleControl}
         coordinates={points}
         onLoadSavedSet={(savedCoords) => {
           setAllPoints(savedCoords);
@@ -192,7 +193,7 @@ export default function CoordinateMap() {
               <ExcelCoordinateImporter
                 onImport={(importedPoints) => {
                   setAllPoints(importedPoints);
-                  useUiStore.getState().setShowImporter(false);
+                  
                   setTimeout(
                     () =>
                       window.dispatchEvent(
@@ -203,7 +204,7 @@ export default function CoordinateMap() {
                     100,
                   );
                 }}
-                setShowImporter={toggleShowImporter}
+                setShowImporter={toggleControl}
                 onLoading={importLoading}
               />
             </motion.div>
@@ -232,7 +233,7 @@ export default function CoordinateMap() {
       )}
       {closePoints && points.length > 1 && (
         <button
-          onClick={toggleClosePoints}
+          onClick={toggleControl('points')}
           className="absolute md:hidden cursor-pointer top-7 topper rounded-2xl font-bold p-1 bg-red-600 right-4 "
         >
           <X size={18} />

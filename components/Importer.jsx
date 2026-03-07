@@ -75,7 +75,7 @@ export default function ExcelCoordinateImporter({
       onImport(previewData);
       setSuccess(`${previewData.length} points added to map.`);
       setPreviewData([]);
-      setShowImporter(false);
+      setShowImporter('importer');
       setConfirmLoading(false); // stop spinner
     }, 500);
   };

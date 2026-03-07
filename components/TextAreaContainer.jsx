@@ -15,7 +15,7 @@ const TextArea = ({
 }) => {
   const { showBar } = extraPointBarToggler();
   const [theme] = useDarkMode();
-  const { showInput, toggleShowInput } = useUiStore();
+  const { showInput, toggleControl } = useUiStore();
 
   // 🎨 Define theme-based styles
   const isDark = theme === "dark";
@@ -43,7 +43,7 @@ const TextArea = ({
           className="absolute topper right-0 bottom-1 p-2 hover:bg-white/80 active:bg-white/90 bg-white rounded-2xl hover:shadow-black"
           role="close button"
           title="close box"
-          onClick={toggleShowInput}
+          onClick={() => toggleControl("input")}
         >
           <X size={24} color="red" />
         </button>
@@ -81,7 +81,7 @@ const TextArea = ({
             input={input}
             points={points}
             setPoints={setPoints}
-            setShowInput={toggleShowInput}
+            setShowInput={toggleControl}
             calculateResults={calculateResults}
             clearAll={clearAll}
           />

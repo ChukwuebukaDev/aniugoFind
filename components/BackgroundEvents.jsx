@@ -3,21 +3,36 @@ import { usePointsStore } from "../Zustand/MapStateManager";
 export default function BackgroundEvents() {
   const {
     showInput,
-    toggleShowInput,
     isSidebarOpen,
     showImporter,
-    toggleShowImporter,
-    toggleSidebar,
     closePoints,
-    toggleClosePoints,
+    autoCluster,
+     activeControl,
+    toggleControl,
   } = useUiStore();
   const state = showInput || showImporter || closePoints || isSidebarOpen;
   const { points } = usePointsStore();
   function toggleBackgroundEvents() {
-    if (showInput) toggleShowInput();
-    if (isSidebarOpen) toggleSidebar();
-    if (showImporter) toggleShowImporter();
-    if (closePoints) toggleClosePoints();
+    if (showInput){
+      toggleControl('input');
+      activeControl === 'input';
+    };
+    if (isSidebarOpen){
+toggleControl('sidebar');
+activeControl === 'sidebar';
+    };
+    if (showImporter) {
+toggleControl('importer');
+activeControl === 'importer';
+    };
+    if (closePoints) {
+toggleControl('points');
+activeControl === 'points';
+    };
+    if (autoCluster) {
+toggleControl('cluster');
+activeControl === 'cluster';
+    };
   }
   return (
     <>

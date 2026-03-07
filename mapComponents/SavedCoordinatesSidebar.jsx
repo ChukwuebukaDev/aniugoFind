@@ -65,7 +65,7 @@ const SavedCoordinatesSidebar = ({
           Saved Coordinates
         </h2>
         <button
-          onClick={onClose}
+          onClick={()=>onClose('sidebar')}
           className="p-1 rounded-full hover:bg-gray-100 transition"
         >
           <X className="w-5 h-5 text-gray-600" />
