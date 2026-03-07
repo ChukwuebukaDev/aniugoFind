@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from "react";
+import { useState} from "react";
 import * as XLSX from "xlsx";
 import { X, FileSpreadsheet } from "lucide-react";
 import { usePointsStore } from "../Zustand/MapStateManager";
@@ -12,6 +10,8 @@ export default function ExcelCompareImporter() {
   const [isOpen, setIsOpen] = useState(false); // closed by default on mobile
   const [matchedRows, setMatchedRows] = useState([]);
   const [error, setError] = useState(null);
+
+
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -49,6 +49,7 @@ export default function ExcelCompareImporter() {
     reader.readAsBinaryString(file);
     e.currentTarget.value = "";
   };
+  const isDesktop = window.innerWidth >= 768
 
   return (
     <>
@@ -66,22 +67,23 @@ export default function ExcelCompareImporter() {
       )}
 
       {/* Sidebar */}
-      <motion.div
-        drag={window.innerWidth >= 768 ? "x" : false} // draggable only on desktop
-        dragConstraints={{ left: 0, right: 0 }}
-        initial={{ x: window.innerWidth < 768 ? "100%" : 0 }}
-        animate={{ x: isOpen ? 0 : window.innerWidth < 768 ? "100%" : 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed top-0 right-0 z-[999] h-full w-[90%] max-w-[450px] bg-emerald-700 p-4 text-white shadow-xl md:max-w-[500px]`}
-      >
+    
+<motion.div
+  drag={isDesktop ? "x" : false}
+  dragConstraints={{ left: 0, right: 0 }}
+  initial={{ x: isDesktop ? "100%" : "100%" }} // start off-screen
+  animate={{ x: isOpen ? 0 : "100%" }} // animate in/out
+  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+  className="fixed top-0 right-0 z-[999] h-full w-[90%] max-w-[450px] bg-emerald-700 p-4 text-white shadow-xl md:max-w-[500px]"
+>
         {/* Header */}
         <header className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-bold">Matched Excel Data</h3>
           <button
             onClick={() => setIsOpen(false)}
-            className="rounded p-1 hover:bg-emerald-600"
+            className="rounded p-1 cursor-pointer hover:bg-emerald-600"
           >
-            <X size={18} />
+            <X size={24} />
           </button>
         </header>
 
