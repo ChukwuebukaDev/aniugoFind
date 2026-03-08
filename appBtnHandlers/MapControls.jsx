@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "framer-motion";
 import { HelpCircle, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -62,19 +60,19 @@ export function MapControls() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-start z-[2000] pointer-events-none">
+    <div className="fixed inset-0 flex items-end justify-center z-[500] pointer-events-none">
 
-      {/* Menu Button */}
+
       <motion.button
         onClick={handleMenuToggle}
-        className="pointer-events-auto ml-4 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white text-lg font-bold bg-emerald-500 hover:bg-emerald-400"
+        className="pointer-events-auto mb-10 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white text-lg font-bold bg-emerald-500 hover:bg-emerald-400"
         whileTap={{ scale: 0.9 }}
         whileHover={{ scale: 1.05 }}
       >
         {drawerOpen ? <X size={20} /> : "☰"}
       </motion.button>
 
-      {/* Controls */}
+   
       {controls.map((control, i) => {
 
         const active = activeControl === control.id;
@@ -85,8 +83,8 @@ export function MapControls() {
             initial={{ opacity: 0, x: 0 }}
             animate={{
               opacity: drawerOpen ? 1 : 0,
-              x: drawerOpen ? 90 : 0,
-              y: drawerOpen ? (i - 2) * 70 : 0,
+              x: drawerOpen ?(i - 2) * 70 : 0,
+              y: drawerOpen ? -120 : 0 ,
               scale: drawerOpen ? 1 : 0.7,
             }}
             transition={{

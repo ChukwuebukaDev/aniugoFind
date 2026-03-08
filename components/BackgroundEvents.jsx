@@ -41,7 +41,7 @@ activeControl === 'cluster';
           onClick={toggleBackgroundEvents}
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999]"
         >
-          <div className="h-full text-3xl font-bold flex justify-center items-center">
+          <div className="h-full text-2xl font-bold flex justify-center items-center">
             {points.length <= 1 && "Point List Empty..."}
           </div>
         </div>

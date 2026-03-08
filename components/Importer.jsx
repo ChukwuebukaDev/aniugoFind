@@ -1,6 +1,8 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import { useUiStore } from "../Zustand/uiState";
 
 export default function ExcelCoordinateImporter({
   onImport,
@@ -12,7 +14,7 @@ export default function ExcelCoordinateImporter({
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
-
+const {toggleControl} = useUiStore();
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -61,14 +63,14 @@ export default function ExcelCoordinateImporter({
       setError("Failed to read the file. Ensure it has Latitude & Longitude.");
     } finally {
       setLoading(false);
-      if (onLoading) onLoading(false); // notify parent
+      if (onLoading) onLoading(false); 
     }
   };
 
   const handleConfirmImport = () => {
     if (previewData.length === 0) return;
 
-    setConfirmLoading(true); // start spinner
+    setConfirmLoading(true); 
 
     // simulate small delay for UX or heavy processing
     setTimeout(() => {
@@ -76,7 +78,7 @@ export default function ExcelCoordinateImporter({
       setSuccess(`${previewData.length} points added to map.`);
       setPreviewData([]);
       setShowImporter('importer');
-      setConfirmLoading(false); // stop spinner
+      setConfirmLoading(false); 
     }, 500);
   };
 
@@ -95,8 +97,12 @@ export default function ExcelCoordinateImporter({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="p-4 bg-black/70 backdrop-blur-md rounded-2xl border border-white/10 text-white w-[90vw] sm:max-w-md shadow-xl "
+      className="p-4 bg-black/30 relative backdrop-blur-md rounded-2xl border border-white/10 text-white w-[90vw] sm:max-w-md shadow-xl "
     >
+      <button onClick={()=>toggleControl('importer')} className="bg-transparent absolute right-5 top-5 border-0">
+<X size={18} color="red"/>
+      </button>
+      
       <h3 className="text-lg font-bold mb-2 text-amber-400">
         📄 Import Coordinates from Excel
       </h3>
