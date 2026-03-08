@@ -93,7 +93,7 @@ export function MapControls() {
               damping: 20,
               delay: i * 0.05,
             }}
-            onClick={() => toggleControl(control.id)}
+            onClick={() => {toggleControl(control.id);console.log(control.id)}}
             className={`pointer-events-auto absolute w-14 h-14 rounded-full flex items-center justify-center border shadow-md transition-all
               
               ${

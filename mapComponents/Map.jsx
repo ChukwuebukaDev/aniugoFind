@@ -41,14 +41,11 @@ export default function CoordinateMap() {
     loading,
     autoCluster,
     showImporter,
-    toggleSidebar,
     toggleControl,
     setLoading,
     setResults,
     closePoints,
     setClosePoints,
-    toggleClosePoints,
-    toggleShowImporter,
   } = useUiStore();
 
   const { points, userLocation, removePoint, clearPoints, setAllPoints } =
@@ -224,21 +221,16 @@ export default function CoordinateMap() {
       {points.length > 1 && (
         <>
           <PointsDisplay
-            closePoints={closePoints}
             deletePoint={deletePoint}
             zoomToPoint={zoomToPoint}
             setPopupTarget={setPopupTarget}
           />
         </>
       )}
-      {closePoints && points.length > 1 && (
-        <button
-          onClick={toggleControl('points')}
-          className="absolute md:hidden cursor-pointer top-7 topper rounded-2xl font-bold p-1 bg-red-600 right-4 "
-        >
-          <X size={18} />
-        </button>
-      )}
+
+
+
+   
       <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
         <MapContainer
           key={theme}

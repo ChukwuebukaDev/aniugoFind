@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Navigation, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmModal from "../utilities/Notifications/ConfirmModal";
+import { X } from "lucide-react";
 import { getRoadDistance } from "../utilities/getRoadDistance";
 import { navigateToPoint } from "../utilities/navigationToPoint";
 import { getTotalDistance } from "../hooks/totalDistance";
 import { usePointsStore } from "../Zustand/MapStateManager";
+import { useUiStore } from "../Zustand/uiState";
 
 export default function PointsDisplay({
-  closePoints,
   zoomToPoint,
   deletePoint,
 }) {
@@ -17,7 +18,7 @@ export default function PointsDisplay({
   const [loadingId, setLoadingId] = useState(null);
   const [totalDistance, setTotalDistance] = useState(null);
   const [confirmPoint, setConfirmPoint] = useState(null);
-
+const {toggleControl,activeControl} = useUiStore();
   const { points, markArrived, markPending } = usePointsStore();
 
   /* ------------------------- Helpers ------------------------- */
@@ -93,7 +94,8 @@ export default function PointsDisplay({
 
   return (
     <AnimatePresence>
-      {closePoints && (
+     
+      {activeControl === 'points' && (
         <motion.div
           initial={{ opacity: 0, scale: 0.96, y: 40 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -105,7 +107,9 @@ export default function PointsDisplay({
                      backdrop-blur-xl rounded-3xl p-5 text-white shadow-[0_25px_60px_rgba(0,0,0,0.6)]
                      border border-white/10"
         >
-          {/* Header */}
+    <button onClick={()=>toggleControl('points')}>
+        <X size={24} color="red"/>
+              </button>
           <div className="flex justify-between items-center mb-4 p-4 rounded-2xl bg-white/10 border border-white/10">
             <div>
               <p className="text-xs opacity-70">Total Distance</p>
