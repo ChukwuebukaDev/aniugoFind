@@ -4,7 +4,7 @@ import { useEffect, useRef, useMemo, useState } from "react";
 import { navigateToPoint } from "../../utilities/navigationToPoint";
 import ConfirmModal from "../../utilities/Notifications/ConfirmModal";
 
-export default function ZoomableMarker({ point, isClosest, openPopup }) {
+export default function ZoomableMarker({ point, isClosest }) {
   const map = useMap();
   const markerRef = useRef();
   const [showConfirm, setShowConfirm] = useState(false);
