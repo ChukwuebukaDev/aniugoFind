@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
 import { motion, AnimatePresence } from "framer-motion";
 
 import UserLocationMarker from "./Markers/UserLocationMarker";
@@ -11,30 +11,38 @@ import {
   FitmapHandler,
   LocateControl,
 } from "../mapComponents";
+
 import { findClosestToStartRoad } from "../utilities/closestPairsCalculation";
+
 import TextArea from "../components/TextAreaContainer";
 import PointsDisplay from "./PointsDisplay";
 import Spinner from "../components/Spinner";
 import ExcelCoordinateImporter from "../components/Importer";
 import SavedCoordinatesSidebar from "./SavedCoordinatesSidebar";
+
 import useDarkMode from "../Themes/useDarkMode";
 import { usePointsStore } from "../Zustand/MapStateManager";
 import { useUiStore } from "../Zustand/uiState";
-import { X } from "lucide-react";
 
 // Fix Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// -----------------
 export default function CoordinateMap() {
-  const mapRef = useRef();
+  const mapRef = useRef(null);
+  const bounceTimeoutRef = useRef(null);
+  const debounceRef = useRef(null);
+
   const [theme] = useDarkMode();
+
   const {
     isSidebarOpen,
     results,
@@ -44,14 +52,12 @@ export default function CoordinateMap() {
     toggleControl,
     setLoading,
     setResults,
-    closePoints,
     setClosePoints,
   } = useUiStore();
 
   const { points, userLocation, removePoint, clearPoints, setAllPoints } =
     usePointsStore();
 
-  // Local UI states
   const [bouncingMarkers, setBouncingMarkers] = useState([]);
   const [popupTarget, setPopupTarget] = useState(null);
   const [input, setInput] = useState("");
@@ -61,74 +67,90 @@ export default function CoordinateMap() {
   const darkUrl =
     "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
-  // Spinner on mount
+  /* ---------------- Spinner on mount ---------------- */
+
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 400);
     return () => clearTimeout(t);
   }, [setLoading]);
 
-  // ----------------- Closest pair calculation
-  const bounceTimeoutRef = useRef();
+  /* ---------------- Closest Pair Calculation ---------------- */
 
-  const calculateResults = useCallback(async (pointList) => {
-    if (!pointList || pointList.length < 2) {
-      setResults(null);
-      setBouncingMarkers([]);
-      return;
-    }
-
-    try {
-      const result = await findClosestToStartRoad(pointList);
-
-      // Guard: invalid result
-      if (!result || !result.pair || result.pair.some((p) => !p)) {
+  const calculateResults = useCallback(
+    async (pointList) => {
+      if (!pointList || pointList.length < 2) {
         setResults(null);
         setBouncingMarkers([]);
         return;
       }
 
-      const [a, b] = result.pair;
+      try {
+        const result = await findClosestToStartRoad(pointList);
 
-      setResults({ closestPair: [a, b] });
+        if (!result?.pair || result.pair.some((p) => !p)) {
+          setResults(null);
+          setBouncingMarkers([]);
+          return;
+        }
 
-      // Find markers to bounce
-      const bouncing = pointList.filter(
-        (p) =>
-          (a &&
-            Math.abs(p.lat - a.lat) < 1e-5 &&
-            Math.abs(p.lng - a.lng) < 1e-5) ||
-          (b &&
-            Math.abs(p.lat - b.lat) < 1e-5 &&
-            Math.abs(p.lng - b.lng) < 1e-5),
-      );
+        const [a, b] = result.pair;
 
-      setBouncingMarkers(bouncing.map((m) => m.name));
+        setResults({ closestPair: [a, b] });
 
-      // Clear previous timeout
-      if (bounceTimeoutRef.current) clearTimeout(bounceTimeoutRef.current);
-      bounceTimeoutRef.current = setTimeout(() => setBouncingMarkers([]), 4000);
-    } catch (err) {
-      console.error("Error calculating closest pair:", err);
-      setResults(null);
-      setBouncingMarkers([]);
-    }
-  }, []);
+        const bouncing = pointList.filter(
+          (p) =>
+            (a &&
+              Math.abs(p.lat - a.lat) < 1e-5 &&
+              Math.abs(p.lng - a.lng) < 1e-5) ||
+            (b &&
+              Math.abs(p.lat - b.lat) < 1e-5 &&
+              Math.abs(p.lng - b.lng) < 1e-5)
+        );
 
-  // Debounce calculation
+        setBouncingMarkers(bouncing.map((m) => m.name));
+
+        if (bounceTimeoutRef.current) {
+          clearTimeout(bounceTimeoutRef.current);
+        }
+
+        bounceTimeoutRef.current = setTimeout(
+          () => setBouncingMarkers([]),
+          4000
+        );
+      } catch (err) {
+        console.error("Error calculating closest pair:", err);
+        setResults(null);
+        setBouncingMarkers([]);
+      }
+    },
+    [setResults]
+  );
+
+  /* ---------------- Debounced Calculation ---------------- */
+
   useEffect(() => {
-    const id = setTimeout(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
       calculateResults(points);
     }, 300);
-    return () => clearTimeout(id);
+
+    return () => clearTimeout(debounceRef.current);
   }, [points, calculateResults]);
+
+  /* ---------------- Closest Marker Helper ---------------- */
 
   const isClosestMarker = useCallback(
     (p) =>
       results?.closestPair?.some(
-        (c) => Math.abs(c.lat - p.lat) < 1e-6 && Math.abs(c.lng - p.lng) < 1e-6,
+        (c) =>
+          Math.abs(c.lat - p.lat) < 1e-6 &&
+          Math.abs(c.lng - p.lng) < 1e-6
       ),
-    [results],
+    [results]
   );
+
+  /* ---------------- Clear All ---------------- */
 
   const clearAll = useCallback(() => {
     clearPoints();
@@ -137,22 +159,44 @@ export default function CoordinateMap() {
     setBouncingMarkers([]);
   }, [clearPoints, setResults]);
 
-  const deletePoint = (index) => removePoint(index);
+  /* ---------------- Delete Point ---------------- */
+
+  const deletePoint = (id) => {
+    removePoint(id);
+  };
+
+  /* ---------------- Zoom To Marker ---------------- */
 
   const zoomToPoint = (lat, lng, name) => {
     const map = mapRef.current;
     if (!map) return;
+
     setPopupTarget(name);
     setBouncingMarkers([name]);
+
     setTimeout(() => setBouncingMarkers([]), 2000);
     setTimeout(() => setClosePoints(false), 400);
-    map.flyTo([lat, lng], 12, { animate: true, duration: 1.2 });
+
+    map.flyTo([lat, lng], 12, {
+      animate: true,
+      duration: 1.2,
+    });
+
     window.dispatchEvent(
-      new CustomEvent("zoomToMarker", { detail: { lat, lng } }),
+      new CustomEvent("zoomToMarker", {
+        detail: { lat, lng },
+      })
     );
   };
 
-  const memoPoints = useMemo(() => points, [points]);
+  /* ---------------- Cleanup ---------------- */
+
+  useEffect(() => {
+    return () => {
+      if (bounceTimeoutRef.current)
+        clearTimeout(bounceTimeoutRef.current);
+    };
+  }, []);
 
   return (
     <>
@@ -164,18 +208,20 @@ export default function CoordinateMap() {
         coordinates={points}
         onLoadSavedSet={(savedCoords) => {
           setAllPoints(savedCoords);
-          setTimeout(
-            () =>
-              window.dispatchEvent(
-                new CustomEvent("fitToMarkers", { detail: savedCoords }),
-              ),
-            100,
-          );
+
+          setTimeout(() => {
+            window.dispatchEvent(
+              new CustomEvent("fitToMarkers", {
+                detail: savedCoords,
+              })
+            );
+          }, 100);
         }}
       />
 
       <MarkerBounce />
 
+      {/* Excel Importer */}
       <div className="relative z-[1000] flex flex-col items-end">
         <AnimatePresence>
           {showImporter && (
@@ -184,25 +230,24 @@ export default function CoordinateMap() {
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[90%] sm:w-[70%]"
+              transition={{ duration: 0.3 }}
+              className="absolute top-[15%] left-1/2 -translate-x-1/2
+              w-[90%] sm:w-[70%]"
             >
               <ExcelCoordinateImporter
                 onImport={(importedPoints) => {
                   setAllPoints(importedPoints);
-                  
-                  setTimeout(
-                    () =>
-                      window.dispatchEvent(
-                        new CustomEvent("fitToMarkers", {
-                          detail: importedPoints,
-                        }),
-                      ),
-                    100,
-                  );
+
+                  setTimeout(() => {
+                    window.dispatchEvent(
+                      new CustomEvent("fitToMarkers", {
+                        detail: importedPoints,
+                      })
+                    );
+                  }, 100);
                 }}
                 setShowImporter={toggleControl}
-                onLoading={importLoading}
+                onLoading={setImportLoading}
               />
             </motion.div>
           )}
@@ -219,42 +264,42 @@ export default function CoordinateMap() {
       />
 
       {points.length > 1 && (
-        <>
-          <PointsDisplay
-            deletePoint={deletePoint}
-            zoomToPoint={zoomToPoint}
-            setPopupTarget={setPopupTarget}
-          />
-        </>
+        <PointsDisplay
+          deletePoint={deletePoint}
+          zoomToPoint={zoomToPoint}
+        />
       )}
 
-
-
-   
+      {/* Map */}
       <div className="relative h-full min-h-[400px] rounded-lg overflow-hidden shadow-md">
         <MapContainer
           key={theme}
           center={[9.082, 8.6753]}
           zoom={6}
-          //zoomControl={false}
           className="h-full"
-          whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
+          whenCreated={(map) => (mapRef.current = map)}
         >
           <TileLayer
             url={theme === "dark" ? darkUrl : lightUrl}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            attribution="&copy; OpenStreetMap"
           />
+
           <RoadRouting points={points} />
 
-          <FitmapHandler markers={memoPoints} />
-          {userLocation && <UserLocationMarker userLocation={userLocation} />}
+          <FitmapHandler markers={points} />
+
+          {userLocation && (
+            <UserLocationMarker userLocation={userLocation} />
+          )}
+
           <MarkerLayer
-            points={memoPoints}
+            points={points}
             autoCluster={autoCluster}
             bouncingMarkers={bouncingMarkers}
             isClosestMarker={isClosestMarker}
             popupTarget={popupTarget}
           />
+
           <LocateControl />
         </MapContainer>
       </div>

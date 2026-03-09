@@ -2,63 +2,89 @@ import { getRoadDistance } from "./getRoadDistance";
 import * as turf from "@turf/turf";
 import { decodeRoute } from "../hooks/geometry";
 
+const DEBUG = false;
+
+// reduce floating precision (improves cache hit rate)
+const normalizeCoord = (n) => Number(n.toFixed(6));
+
 async function findClosestToStartRoad(points) {
-  if (!points || points.length < 2) {
+  if (!Array.isArray(points) || points.length < 2) {
     throw new Error("At least two points are required");
   }
 
-  const start = points[0];
+  const start = {
+    lat: normalizeCoord(points[0].lat),
+    lng: normalizeCoord(points[0].lng),
+  };
+
   const startPoint = turf.point([start.lng, start.lat]);
 
-  let approxMin = Infinity;
-  let closest = null;
+  let approxMinDistance = Infinity;
+  let closestPoint = null;
+
   const debugDistances = [];
 
-  // Step 1: Turf straight-line distance (fast filter)
+  // STEP 1: Fast straight-line distance filtering
   for (let i = 1; i < points.length; i++) {
-    const current = points[i];
-    const currentPoint = turf.point([current.lng, current.lat]);
+    const candidate = {
+      lat: normalizeCoord(points[i].lat),
+      lng: normalizeCoord(points[i].lng),
+    };
 
-    const approxDist = turf.distance(startPoint, currentPoint, {
+    const candidatePoint = turf.point([candidate.lng, candidate.lat]);
+
+    const approxDistance = turf.distance(startPoint, candidatePoint, {
       units: "kilometers",
     });
 
-    // Save for debugging
-    debugDistances.push({
-      point: current,
-      approxDistance: approxDist,
-    });
+    if (DEBUG) {
+      debugDistances.push({
+        point: candidate,
+        approxDistance,
+      });
+    }
 
-    if (approxDist < approxMin) {
-      approxMin = approxDist;
-      closest = current;
+    if (approxDistance < approxMinDistance) {
+      approxMinDistance = approxDistance;
+      closestPoint = candidate;
     }
   }
 
-  // Step 2: Use ORS only for the best match
-  let roadDistance = approxMin;
+  // Safety guard
+  if (!closestPoint) {
+    return {
+      pair: null,
+      distance: null,
+      approxDistance: null,
+      routeLine: [],
+      debug: DEBUG ? debugDistances : undefined,
+    };
+  }
+
+  // STEP 2: Fetch real road distance from ORS
+  let roadDistance = approxMinDistance;
   let routeLine = [];
 
   try {
-    if (closest) {
-      const result = await getRoadDistance(start, closest);
-      if (result?.distance) {
-        roadDistance = result.distance;
-      }
-      if (result?.geometry) {
-        routeLine = decodeRoute(result.geometry);
-      }
+    const result = await getRoadDistance(start, closestPoint);
+
+    if (result?.distance) {
+      roadDistance = result.distance;
     }
-  } catch (err) {
-    console.error("ORS error:", err);
+
+    if (result?.geometry) {
+      routeLine = decodeRoute(result.geometry);
+    }
+  } catch (error) {
+    console.error("Road distance fetch failed:", error);
   }
 
   return {
-    pair: [start, closest],
+    pair: [start, closestPoint],
     distance: roadDistance,
-    approxDistance: approxMin,
-    debug: debugDistances, // remove in production if needed
+    approxDistance: approxMinDistance,
     routeLine,
+    debug: DEBUG ? debugDistances : undefined,
   };
 }
 

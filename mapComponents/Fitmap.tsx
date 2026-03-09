@@ -1,9 +1,7 @@
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 
-/* -------------------------------------------------
-   Types
--------------------------------------------------- */
+
 
 export interface MarkerPoint {
   lat: number;
@@ -11,20 +9,16 @@ export interface MarkerPoint {
   [key: string]: any;
 }
 
-type MarkerBounds = [number, number][]; // safe replacement for LatLngBoundsExpression
+type MarkerBounds = [number, number][]; 
 
 interface FitmapHandlerProps {
   markers: MarkerPoint[];
 }
 
-/* -------------------------------------------------
-   Component
--------------------------------------------------- */
 
 export default function FitmapHandler({ markers }: FitmapHandlerProps): null {
   const map = useMap();
 
-  /* Fit map on markers update */
   useEffect(() => {
     if (!markers || markers.length === 0) return;
 
@@ -38,7 +32,6 @@ export default function FitmapHandler({ markers }: FitmapHandlerProps): null {
     }
   }, [map, markers]);
 
-  /* Restore fit from custom event */
   useEffect(() => {
     const handleRestoreFit = (e: Event) => {
       const custom = e as CustomEvent<MarkerPoint[]>;
@@ -52,7 +45,6 @@ export default function FitmapHandler({ markers }: FitmapHandlerProps): null {
       try {
         map.fitBounds(bounds, { padding: [60, 60] });
       } catch {
-        // ignore if map not ready
       }
     };
 
