@@ -4,16 +4,24 @@ import Header from "../components/Header";
 import Main from "../components/Main";
 import Footer from "../components/Footer";
 import { useUiStore } from "../Zustand/uiState";
-import { useState } from "react";
+import { useEffect } from "react";
+import AuthGate from "../security/AuthPapge";
 
 function App() {
-  const { loading } = useUiStore();
-
+  const { loading ,setLoading} = useUiStore();
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 400);
+    return () => clearTimeout(t);
+  }, [setLoading]);
   return (
     <div className="relative w-full min-h-screen flex flex-col dark:text-gray-100 transition-colors duration-500 ease-in-out">
       <Spinner loading={loading} />
       <Header />
-      <Main /> 
+ <AuthGate>
+
+    <Main /> 
+ </AuthGate>
+  
       <Footer />
     </div>
   );

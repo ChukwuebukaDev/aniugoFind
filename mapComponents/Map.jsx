@@ -277,6 +277,7 @@ export default function CoordinateMap() {
           center={[9.082, 8.6753]}
           zoom={6}
           className="h-full"
+          zoomControl = {false}
           whenCreated={(map) => (mapRef.current = map)}
         >
           <TileLayer

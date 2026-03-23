@@ -73,43 +73,43 @@ export function MapControls() {
       </motion.button>
 
    
-      {controls.map((control, i) => {
+        {controls.map((control, i) => {
 
-        const active = activeControl === control.id;
+          const active = activeControl === control.id;
 
-        return (
-          <motion.button
-            key={control.id}
-            initial={{ opacity: 0, x: 0 }}
-            animate={{
-              opacity: drawerOpen ? 1 : 0,
-              x: drawerOpen ?(i - 2) * 70 : 0,
-              y: drawerOpen ? -120 : 0 ,
-              scale: drawerOpen ? 1 : 0.7,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 260,
-              damping: 20,
-              delay: i * 0.05,
-            }}
-            onClick={() => {toggleControl(control.id);console.log(control.id)}}
-            className={`pointer-events-auto absolute w-14 h-14 rounded-full flex items-center justify-center border shadow-md transition-all
-              
-              ${
-                active
-                  ? "bg-emerald-500 text-white shadow-emerald-400/50"
-                  : darkTheme
-                  ? "bg-neutral-800 text-white"
-                  : "bg-white text-black"
-              }
+          return (
+            <motion.button
+              key={control.id}
+              initial={{ opacity: 0, x: 0 }}
+              animate={{
+                opacity: drawerOpen ? 1 : 0,
+                x: drawerOpen ?(i - 2) * 70 : 0,
+                y: drawerOpen ? -120 : 0 ,
+                scale: drawerOpen ? 1 : 0.7,
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 20,
+                delay: i * 0.05,
+              }}
+              onClick={() => {toggleControl(control.id);console.log(control.id)}}
+              className={`pointer-events-auto absolute w-14 h-14 rounded-full flex items-center justify-center border shadow-md transition-all
+                
+                ${
+                  active
+                    ? "bg-emerald-500 text-white shadow-emerald-400/50"
+                    : darkTheme
+                    ? "bg-neutral-800 text-white"
+                    : "bg-white text-black"
+                }
 
-            `}
-          >
-            {control.icon}
-          </motion.button>
-        );
-      })}
+              `}
+            >
+              {control.icon}
+            </motion.button>
+          );
+        })}
 
       {/* Hint */}
       {showHint && (
