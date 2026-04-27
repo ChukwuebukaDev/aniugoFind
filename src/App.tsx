@@ -17,10 +17,10 @@ function App() {
     <div className="relative w-full min-h-screen flex flex-col dark:text-gray-100 transition-colors duration-500 ease-in-out">
       <Spinner loading={loading} />
       <Header />
- <AuthGate>
+
 
     <Main /> 
- </AuthGate>
+
   
       <Footer />
     </div>
