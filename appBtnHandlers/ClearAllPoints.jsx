@@ -15,13 +15,13 @@ export default function ClearAllPointsButton() {
   return (
     <>
       {points.length > 1 && (
-        <div className=" z-[3000] flex flex-col items-start gap-2">
+        <div className="flex flex-col items-start gap-2">
           {/* Main Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowConfirm(true)}
-            className="z-[1000] items-center gap-2 bg-red-600 px-4 py-1 text-white shadow-lg hover:bg-red-700"
+            className="items-center rounded-2xl gap-2 bg-red-600 px-4 py-1 transition-colors duration-600 text-white shadow-lg hover:bg-red-500"
           >
             <Trash2 size={18} />
             
@@ -33,7 +33,7 @@ export default function ClearAllPointsButton() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="mt-2 fixed right-0 top-10 w-[220px] toppest rounded bg-white p-3 text-black shadow-lg"
+              className="mt-2 z-500 fixed right-0 top-10 w-[220px] rounded bg-white p-3 text-black shadow-lg"
             >
               <p className="mb-2 text-sm font-medium">
                 Are you sure you want to clear all points? This cannot be

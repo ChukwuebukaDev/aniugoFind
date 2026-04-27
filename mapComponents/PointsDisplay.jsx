@@ -156,8 +156,7 @@ export default function PointsDisplay({ zoomToPoint, deletePoint }) {
           transition={{ duration: 0.4, ease: "easeOut" }}
           className="fixed topper top-1/2 left-1/2 z-[999]
                      -translate-x-1/2 -translate-y-1/2
-                     w-[92vw] sm:max-w-lg max-h-[80vh] overflow-y-auto
-                     bg-gradient-to-br from-black/80 via-black/60 to-black/80
+                     w-[92vw] conic sm:max-w-lg max-h-[80vh] overflow-y-auto
                      backdrop-blur-xl rounded-3xl p-5 text-white
                      shadow-[0_25px_60px_rgba(0,0,0,0.6)]
                      border border-white/10"
@@ -168,17 +167,17 @@ export default function PointsDisplay({ zoomToPoint, deletePoint }) {
           </button>
 
           {/* Summary */}
-          <div className="flex justify-between items-center mb-4 p-4 rounded-2xl bg-white/10 border border-white/10">
+          <div className="flex justify-between items-center mb-4 p-4 rounded-2xl bg-white/50 border border-white/10">
             <div>
-              <p className="text-xs opacity-70">Total Distance</p>
-              <p className="text-sm font-bold text-emerald-400">
+              <p className="text-xs text-black font-bold opacity-70">Total Distance</p>
+              <p className="text-sm font-bold text-pink-900">
                 {totalDistance ?? "Calculating…"}
               </p>
             </div>
 
             <div className="text-right">
-              <p className="text-xs opacity-70">Sites</p>
-              <p className="text-lg font-bold text-amber-400">
+              <p className="text-xs opacity-70 text-black font-bold">Sites</p>
+              <p className="text-lg font-bold text-pink-900">
                 {totalSites}
               </p>
             </div>
@@ -193,8 +192,8 @@ export default function PointsDisplay({ zoomToPoint, deletePoint }) {
           </div>
 
           <div className="flex justify-between text-xs opacity-70 mb-3">
-            <span>Pending: {pendingSites}</span>
-            <span>Arrived: {arrivedSites}</span>
+            <span className="font-bold text-black">Pending: {pendingSites}</span>
+            <span className="font-bold text-black">Arrived: {arrivedSites}</span>
           </div>
 
           {/* Points List */}

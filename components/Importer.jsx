@@ -2,7 +2,7 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X ,Trash} from "lucide-react";
 import { useUiStore } from "../Zustand/uiState";
 
 export default function ExcelCoordinateImporter({
@@ -196,8 +196,8 @@ export default function ExcelCoordinateImporter({
               <thead className="bg-gray-800 text-amber-400 sticky top-0">
                 <tr>
                   <th className="p-2">Name</th>
-                  <th className="p-2">Lat</th>
-                  <th className="p-2">Lng</th>
+                  <th className="p-2">Lat & Lng</th>
+                  
                   <th className="p-2">❌</th>
                 </tr>
               </thead>
@@ -222,41 +222,18 @@ export default function ExcelCoordinateImporter({
                     </td>
 
                     <td className="p-2">
-                      <input
-                        type="number"
-                        value={p.lat}
-                        onChange={(e) =>
-                          handleEditRow(
-                            i,
-                            "lat",
-                            parseFloat(e.target.value)
-                          )
-                        }
-                        className="bg-transparent border border-white/10 px-2 py-1 rounded w-full"
-                      />
+                      <p className="bg-transparent border border-white/10 px-2 py-1 rounded w-full">{p.lat.toFixed(5)},{p.lng.toFixed(5)}</p>
+                   
                     </td>
 
-                    <td className="p-2">
-                      <input
-                        type="number"
-                        value={p.lng}
-                        onChange={(e) =>
-                          handleEditRow(
-                            i,
-                            "lng",
-                            parseFloat(e.target.value)
-                          )
-                        }
-                        className="bg-transparent border border-white/10 px-2 py-1 rounded w-full"
-                      />
-                    </td>
+
 
                     <td className="text-center">
                       <button
                         onClick={() => handleRemoveRow(i)}
                         className="hover:text-red-400"
                       >
-                        🗑️
+                        <Trash size={18} color="red"/>
                       </button>
                     </td>
                   </tr>
