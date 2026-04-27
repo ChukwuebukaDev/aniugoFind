@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { Toaster } from "sonner";
 
 function App() {
-  const { loading ,setLoading} = useUiStore();
+  const { loading, setLoading } = useUiStore();
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 400);
     return () => clearTimeout(t);
@@ -18,12 +18,10 @@ function App() {
       <Spinner loading={loading} />
       <Header />
 
+      <Main />
 
-    <Main /> 
-
-  
       <Footer />
-      <Toaster richColors position="top-center"/>
+      <Toaster richColors position="top-center" />
     </div>
   );
 }

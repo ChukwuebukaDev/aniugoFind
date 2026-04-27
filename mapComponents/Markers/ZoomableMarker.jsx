@@ -101,10 +101,10 @@ export default function ZoomableMarker({ point, isClosest }) {
       >
         <Popup>
           <div className="cursor-pointer font-medium flex flex-col gap-1">
-            <p className="text-2xl mt-0 mb-0">{point.name} <button className="text-green-500"  onClick={() => clickToCopy(point.name)}>Copy </button></p>
-            <p className="m-0">{`${point.lat.toFixed(6)},${point.lng.toFixed(6)}`} <button className="text-green-500"  onClick={() => clickToCopy(`${point.lat.toFixed(6)},${point.lng.toFixed(6)}`)}>Copy </button></p>
+            <div className="text-lg">{point.name} <button className="text-green-500"  onClick={() => clickToCopy(point.name)}>Copy </button></div>
+            <div className="m-0">{`${point.lat.toFixed(6)},${point.lng.toFixed(6)}`} <button className="text-green-500"  onClick={() => clickToCopy(`${point.lat.toFixed(6)},${point.lng.toFixed(6)}`)}>Copy </button></div>
 
-            <p className="m-0">{placeName} <button className="text-green-500"  onClick={() => clickToCopy(placeName)}>Copy </button></p>
+            <div className="m-0">{placeName} <button className="text-green-500"  onClick={() => clickToCopy(placeName)}>Copy </button></div>
             <button
               className="self-end animate-spin rounded-full p-1 bg-red-100 hover:bg-red-200 transition-colors"
               onClick={() => setShowConfirm(true)}
