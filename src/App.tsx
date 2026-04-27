@@ -5,7 +5,7 @@ import Main from "../components/Main";
 import Footer from "../components/Footer";
 import { useUiStore } from "../Zustand/uiState";
 import { useEffect } from "react";
-import AuthGate from "../security/AuthPapge";
+import { Toaster } from "sonner";
 
 function App() {
   const { loading ,setLoading} = useUiStore();
@@ -23,6 +23,7 @@ function App() {
 
   
       <Footer />
+      <Toaster richColors position="top-center"/>
     </div>
   );
 }
