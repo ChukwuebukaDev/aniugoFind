@@ -22,10 +22,11 @@ export default function ZoomableMarker({ point, isClosest }) {
 
     const fetchPlace = async () => {
       try {
-        const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${point.lng},${point.lat}.json?access_token=${MapboxAccess}`);
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${point.lng},${point.lat}.json?access_token=${MapboxAccess}`,
+        );
 
         const data = await res.json();
-        console.log("Reverse Geocoding Data:", data);
 
         const place = data.features?.[0]?.place_name;
         setPlaceName(place || "Unknown location");
@@ -101,10 +102,36 @@ export default function ZoomableMarker({ point, isClosest }) {
       >
         <Popup>
           <div className="cursor-pointer font-medium flex flex-col gap-1">
-            <div className="text-lg">{point.name} <button className="text-green-500"  onClick={() => clickToCopy(point.name)}>Copy </button></div>
-            <div className="m-0">{`${point.lat.toFixed(6)},${point.lng.toFixed(6)}`} <button className="text-green-500"  onClick={() => clickToCopy(`${point.lat.toFixed(6)},${point.lng.toFixed(6)}`)}>Copy </button></div>
+            <div className="text-lg">
+              {point.name}{" "}
+              <button
+                className="text-green-500"
+                onClick={() => clickToCopy(point.name)}
+              >
+                Copy{" "}
+              </button>
+            </div>
+            <div className="m-0">
+              {`${point.lat.toFixed(6)},${point.lng.toFixed(6)}`}{" "}
+              <button
+                className="text-green-500"
+                onClick={() =>
+                  clickToCopy(`${point.lat.toFixed(6)},${point.lng.toFixed(6)}`)
+                }
+              >
+                Copy{" "}
+              </button>
+            </div>
 
-            <div className="m-0">{placeName} <button className="text-green-500"  onClick={() => clickToCopy(placeName)}>Copy </button></div>
+            <div className="m-0">
+              {placeName}{" "}
+              <button
+                className="text-green-500"
+                onClick={() => clickToCopy(placeName)}
+              >
+                Copy{" "}
+              </button>
+            </div>
             <button
               className="self-end animate-spin rounded-full p-1 bg-red-100 hover:bg-red-200 transition-colors"
               onClick={() => setShowConfirm(true)}

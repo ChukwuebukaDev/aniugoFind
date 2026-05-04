@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useUiStore } from "../Zustand/uiState";
 
 export function MapControls() {
-
   const {
     isSidebarOpen,
     showImporter,
@@ -52,7 +51,7 @@ export function MapControls() {
         icon: <img src="images/bulk.png" className="w-6 h-6" />,
       },
     ],
-    [isSidebarOpen, showImporter, autoCluster, showInput, closePoints]
+    [isSidebarOpen, showImporter, autoCluster, showInput, closePoints],
   );
 
   const handleMenuToggle = () => {
@@ -61,8 +60,6 @@ export function MapControls() {
 
   return (
     <div className="fixed inset-0 flex items-end justify-center z-[500] pointer-events-none">
-
-
       <motion.button
         onClick={handleMenuToggle}
         className="pointer-events-auto mb-10 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white text-lg font-bold bg-emerald-500 hover:bg-emerald-400"
@@ -72,44 +69,44 @@ export function MapControls() {
         {drawerOpen ? <X size={20} /> : "☰"}
       </motion.button>
 
-   
-        {controls.map((control, i) => {
+      {controls.map((control, i) => {
+        const active = activeControl === control.id;
 
-          const active = activeControl === control.id;
-
-          return (
-            <motion.button
-              key={control.id}
-              initial={{ opacity: 0, x: 0 }}
-              animate={{
-                opacity: drawerOpen ? 1 : 0,
-                x: drawerOpen ?(i - 2) * 70 : 0,
-                y: drawerOpen ? -120 : 0 ,
-                scale: drawerOpen ? 1 : 0.7,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 260,
-                damping: 20,
-                delay: i * 0.05,
-              }}
-              onClick={() => {toggleControl(control.id);console.log(control.id)}}
-              className={`pointer-events-auto absolute w-14 h-14 rounded-full flex items-center justify-center border shadow-md transition-all
+        return (
+          <motion.button
+            key={control.id}
+            initial={{ opacity: 0, x: 0 }}
+            animate={{
+              opacity: drawerOpen ? 1 : 0,
+              x: drawerOpen ? (i - 2) * 70 : 0,
+              y: drawerOpen ? -120 : 0,
+              scale: drawerOpen ? 1 : 0.7,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+              delay: i * 0.05,
+            }}
+            onClick={() => {
+              toggleControl(control.id);
+            }}
+            className={`pointer-events-auto absolute w-14 h-14 rounded-full flex items-center justify-center border shadow-md transition-all
                 
                 ${
                   active
                     ? "bg-emerald-500 text-white shadow-emerald-400/50"
                     : darkTheme
-                    ? "bg-neutral-800 text-white"
-                    : "bg-white text-black"
+                      ? "bg-neutral-800 text-white"
+                      : "bg-white text-black"
                 }
 
               `}
-            >
-              {control.icon}
-            </motion.button>
-          );
-        })}
+          >
+            {control.icon}
+          </motion.button>
+        );
+      })}
 
       {/* Hint */}
       {showHint && (

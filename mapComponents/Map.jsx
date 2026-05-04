@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
 import { motion, AnimatePresence } from "framer-motion";
-
+import RadiusClusterOverlay from "./Cluster/ClusterOverlay";
 import UserLocationMarker from "./Markers/UserLocationMarker";
 import {
   MarkerBounce,
@@ -30,10 +30,8 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 export default function CoordinateMap() {
@@ -104,7 +102,7 @@ export default function CoordinateMap() {
               Math.abs(p.lng - a.lng) < 1e-5) ||
             (b &&
               Math.abs(p.lat - b.lat) < 1e-5 &&
-              Math.abs(p.lng - b.lng) < 1e-5)
+              Math.abs(p.lng - b.lng) < 1e-5),
         );
 
         setBouncingMarkers(bouncing.map((m) => m.name));
@@ -115,7 +113,7 @@ export default function CoordinateMap() {
 
         bounceTimeoutRef.current = setTimeout(
           () => setBouncingMarkers([]),
-          4000
+          4000,
         );
       } catch (err) {
         console.error("Error calculating closest pair:", err);
@@ -123,7 +121,7 @@ export default function CoordinateMap() {
         setBouncingMarkers([]);
       }
     },
-    [setResults]
+    [setResults],
   );
 
   /* ---------------- Debounced Calculation ---------------- */
@@ -143,11 +141,9 @@ export default function CoordinateMap() {
   const isClosestMarker = useCallback(
     (p) =>
       results?.closestPair?.some(
-        (c) =>
-          Math.abs(c.lat - p.lat) < 1e-6 &&
-          Math.abs(c.lng - p.lng) < 1e-6
+        (c) => Math.abs(c.lat - p.lat) < 1e-6 && Math.abs(c.lng - p.lng) < 1e-6,
       ),
-    [results]
+    [results],
   );
 
   /* ---------------- Clear All ---------------- */
@@ -185,7 +181,7 @@ export default function CoordinateMap() {
     window.dispatchEvent(
       new CustomEvent("zoomToMarker", {
         detail: { lat, lng },
-      })
+      }),
     );
   };
 
@@ -193,8 +189,7 @@ export default function CoordinateMap() {
 
   useEffect(() => {
     return () => {
-      if (bounceTimeoutRef.current)
-        clearTimeout(bounceTimeoutRef.current);
+      if (bounceTimeoutRef.current) clearTimeout(bounceTimeoutRef.current);
     };
   }, []);
 
@@ -213,7 +208,7 @@ export default function CoordinateMap() {
             window.dispatchEvent(
               new CustomEvent("fitToMarkers", {
                 detail: savedCoords,
-              })
+              }),
             );
           }, 100);
         }}
@@ -242,7 +237,7 @@ export default function CoordinateMap() {
                     window.dispatchEvent(
                       new CustomEvent("fitToMarkers", {
                         detail: importedPoints,
-                      })
+                      }),
                     );
                   }, 100);
                 }}
@@ -264,10 +259,7 @@ export default function CoordinateMap() {
       />
 
       {points.length > 1 && (
-        <PointsDisplay
-          deletePoint={deletePoint}
-          zoomToPoint={zoomToPoint}
-        />
+        <PointsDisplay deletePoint={deletePoint} zoomToPoint={zoomToPoint} />
       )}
 
       {/* Map */}
@@ -277,7 +269,7 @@ export default function CoordinateMap() {
           center={[9.082, 8.6753]}
           zoom={6}
           className="h-full"
-          zoomControl = {false}
+          zoomControl={false}
           whenCreated={(map) => (mapRef.current = map)}
         >
           <TileLayer
@@ -288,10 +280,12 @@ export default function CoordinateMap() {
           <RoadRouting points={points} />
 
           <FitmapHandler markers={points} />
-
-          {userLocation && (
-            <UserLocationMarker userLocation={userLocation} />
-          )}
+          <RadiusClusterOverlay
+            points={points}
+            radius={10500}
+            onCountChange={(count) => console.log("Cluster count:", count)}
+          />
+          {userLocation && <UserLocationMarker userLocation={userLocation} />}
 
           <MarkerLayer
             points={points}

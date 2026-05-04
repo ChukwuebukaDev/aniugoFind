@@ -1,4 +1,4 @@
-import ClearAllPointsButton from "../appBtnHandlers/ClearAllPoints";
+import HeaderNav from "./HeaderNav";
 
 export default function Header() {
   return (
@@ -7,7 +7,7 @@ export default function Header() {
         Ageo📍
       </h1>
       <div className="flex">
-        <ClearAllPointsButton />
+        <HeaderNav />
       </div>
     </header>
   );

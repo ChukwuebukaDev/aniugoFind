@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import extraPointBarToggler from "../hooks/helperHook";
-
+import ClearAllPointsButton from "../appBtnHandlers/ClearAllPoints";
 export default function HeaderNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
@@ -26,7 +26,7 @@ export default function HeaderNav() {
     setIsOpen(false);
 
     if (tab !== "settings") setSettingsOpen(false);
-    if (tab === "addPoints") toggleShowbar();
+    // if (tab === "addPoints") toggleShowbar();
     if (tab === "routes") console.log("Routes clicked");
     if (tab === "saved") console.log("Saved clicked");
   };
@@ -43,7 +43,7 @@ export default function HeaderNav() {
         >
           Home
         </button>
-
+        {/* 
         <button
           onClick={() => handleNavClick("addPoints")}
           className={`hover:text-gray-200 transition-colors ${
@@ -51,7 +51,7 @@ export default function HeaderNav() {
           }`}
         >
           Add Points
-        </button>
+        </button> */}
 
         <button
           onClick={() => handleNavClick("routes")}
@@ -155,11 +155,11 @@ export default function HeaderNav() {
             className={`fixed top-0 right-0 h-full w-56 bg-white dark:bg-gray-800 shadow-2xl rounded-l-xl z-[1001] transform transition-transform duration-300 ease-in-out
             ${isOpen ? "translate-x-0" : "translate-x-full"}`}
           >
-            <div className="flex flex-col mt-16 px-4 gap-2 topper relative">
+            <div className="flex flex-col mt-16 px-4 gap-2 topper">
               <span
                 title="close"
                 onClick={handleClose}
-                className="absolute hover:border-b-2 cursor-pointer left-0 top-0 p-2"
+                className="absolute hover:border-b-2 cursor-pointer right-0 top-0 p-2"
               >
                 ❌
               </span>
@@ -171,12 +171,12 @@ export default function HeaderNav() {
                 Home
               </button>
 
-              <button
+              {/* <button
                 className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left rounded-md"
                 onClick={() => handleNavClick("addPoints")}
               >
                 Add Points
-              </button>
+              </button> */}
 
               <button
                 className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left rounded-md"
@@ -212,6 +212,7 @@ export default function HeaderNav() {
               >
                 Saved
               </button>
+              <ClearAllPointsButton />
             </div>
           </div>
         </div>
