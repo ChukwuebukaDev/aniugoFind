@@ -137,7 +137,7 @@ function DistanceConfirmModal({ show, toPoint, points, onSelect, onClose }) {
         </div>
 
         <p className="text-xs text-white/60 mb-2">Select starting point:</p>
-        <div className="space-y-2 max-h- overflow-y-auto">
+        <div className="space-y-2 max-h-[85vh] overflow-y-auto">
           {otherPoints.map((p) => (
             <button
               key={p.id}
@@ -429,78 +429,90 @@ export default function PointsDisplay({ zoomToPoint, deletePoint }) {
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {activeControl === "points" && (
         <>
           <motion.div
+            layout
             initial={{ opacity: 0, scale: 0.96, y: 40 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 40 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="fixed topper top-1/2 left-1/2 z-[999]
-                       -translate-x-1/2 -translate-y-1/2
-                       w- conic sm:max-w-lg max-h- overflow-y-auto
-                       backdrop-blur-xl rounded-3xl p-5 text-white
-                       shadow-[0_25px_60px_rgba(0,0,0,0.6)]
-                       border border-white/10"
+                   -translate-x-1/2 -translate-y-1/2
+                   w-full sm:max-w-lg
+                   h-[85vh] conic overflow-hidden
+                   backdrop-blur-xl rounded-3xl p-5 text-white
+                   shadow-[0_25px_60px_rgba(0,0,0,0.6)]
+                   border border-white/10"
           >
             <button onClick={() => toggleControl("points")}>
               <X size={24} color="red" />
             </button>
 
-            <div className="flex justify-between items-center mb-4 p-4 rounded-2xl bg-white/50 border border-white/10">
-              <div>
-                <p className="text-xs text-black font-bold opacity-70">
-                  Total Distance
-                </p>
-                <p className="text-sm font-bold text-pink-900">
-                  {totalDistance ?? "Calculating…"}
-                </p>
+            <div className="flex flex-col h-full">
+              <div className="shrink-0">
+                <div className="flex justify-between items-center mb-4 p-4 rounded-2xl bg-white/50 border border-white/10">
+                  <div>
+                    <p className="text-xs text-black font-bold opacity-70">
+                      Total Distance
+                    </p>
+                    <p className="text-sm font-bold text-pink-900">
+                      {totalDistance ?? "Calculating…"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs opacity-70 text-black font-bold">
+                      Sites
+                    </p>
+                    <p className="text-lg font-bold text-pink-900">
+                      {totalSites}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mb-5 h-3 w-full rounded-full bg-gray-600 overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                <div className="flex justify-between text-xs opacity-70 mb-3">
+                  <span className="font-bold text-black">
+                    Pending: {pendingSites}
+                  </span>
+                  <span className="font-bold text-black">
+                    Arrived: {arrivedSites}
+                  </span>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs opacity-70 text-black font-bold">Sites</p>
-                <p className="text-lg font-bold text-pink-900">{totalSites}</p>
+
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <motion.ul
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-3 pr-1 pb-2"
+                >
+                  {points.map((p) => (
+                    <PointItem
+                      key={p.id}
+                      p={p}
+                      isActive={activePointId === p.id}
+                      points={points}
+                      distanceResults={distanceResults}
+                      loadingKey={loadingKey}
+                      toggleActive={toggleActive}
+                      handleArrivalToggle={handleArrivalToggle}
+                      setConfirmPoint={setConfirmPoint}
+                      handlePointZoom={handlePointZoom}
+                      setDistanceModalPoint={setDistanceModalPoint}
+                    />
+                  ))}
+                </motion.ul>
               </div>
             </div>
-
-            <div className="mb-5 h-3 w-full rounded-full bg-gray-600 overflow-hidden">
-              <div
-                className="h-full bg-green-500 transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-
-            <div className="flex justify-between text-xs opacity-70 mb-3">
-              <span className="font-bold text-black">
-                Pending: {pendingSites}
-              </span>
-              <span className="font-bold text-black">
-                Arrived: {arrivedSites}
-              </span>
-            </div>
-
-            <motion.ul
-              variants={listVariants}
-              initial="hidden"
-              animate="visible"
-              className="space-y-3"
-            >
-              {points.map((p) => (
-                <PointItem
-                  key={p.id}
-                  p={p}
-                  isActive={activePointId === p.id}
-                  points={points}
-                  distanceResults={distanceResults}
-                  loadingKey={loadingKey}
-                  toggleActive={toggleActive}
-                  handleArrivalToggle={handleArrivalToggle}
-                  setConfirmPoint={setConfirmPoint}
-                  handlePointZoom={handlePointZoom}
-                  setDistanceModalPoint={setDistanceModalPoint}
-                />
-              ))}
-            </motion.ul>
 
             <ConfirmModal
               show={!!confirmPoint}

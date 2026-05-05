@@ -7,32 +7,32 @@ export default function BackgroundEvents() {
     showImporter,
     closePoints,
     autoCluster,
-     activeControl,
+    activeControl,
     toggleControl,
   } = useUiStore();
   const state = showInput || showImporter || closePoints || isSidebarOpen;
   const { points } = usePointsStore();
   function toggleBackgroundEvents() {
-    if (showInput){
-      toggleControl('input');
-      activeControl === 'input';
-    };
-    if (isSidebarOpen){
-toggleControl('sidebar');
-activeControl === 'sidebar';
-    };
+    if (showInput) {
+      toggleControl("input");
+      activeControl === "input";
+    }
+    if (isSidebarOpen) {
+      toggleControl("sidebar");
+      activeControl === "sidebar";
+    }
     if (showImporter) {
-toggleControl('importer');
-activeControl === 'importer';
-    };
+      toggleControl("importer");
+      activeControl === "importer";
+    }
     if (closePoints) {
-toggleControl('points');
-activeControl === 'points';
-    };
+      toggleControl("points");
+      activeControl === "points";
+    }
     if (autoCluster) {
-toggleControl('cluster');
-activeControl === 'cluster';
-    };
+      toggleControl("cluster");
+      activeControl === "cluster";
+    }
   }
   return (
     <>
