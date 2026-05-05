@@ -5,6 +5,6 @@ import App from "./App.tsx";
 import MaintenancePage from "./FixPage.tsx";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <MaintenancePage />
+    <App />
   </StrictMode>,
 );

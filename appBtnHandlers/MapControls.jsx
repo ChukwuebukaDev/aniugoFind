@@ -1,6 +1,5 @@
-import { motion } from "framer-motion";
-import { HelpCircle, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMemo, useState } from "react";
 import { useUiStore } from "../Zustand/uiState";
 
 export function MapControls() {
@@ -15,114 +14,150 @@ export function MapControls() {
     toggleControl,
   } = useUiStore();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showHint, setShowHint] = useState(true);
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowHint(false), 3500);
-    return () => clearTimeout(t);
-  }, []);
+  const [open, setOpen] = useState(false);
 
   const controls = useMemo(
     () => [
       {
         id: "sidebar",
-        label: isSidebarOpen ? "Hide Saved" : "Show Saved",
-        icon: <img src="images/memory.png" className="w-6 h-6" />,
+        icon: <img src="images/memory.png" width={36} alt="Sidebar" />,
+        active: isSidebarOpen,
       },
       {
         id: "importer",
-        label: showImporter ? "Close Form" : "Upload Excel",
-        icon: <img src="images/excel.png" className="w-6 h-6" />,
+        icon: <img src="images/excel.png" width={36} alt="Importer" />,
+        active: showImporter,
       },
       {
         id: "cluster",
-        label: autoCluster ? "Stop Cluster" : "Auto Cluster",
-        icon: <img src="images/cluster.png" className="w-6 h-6" />,
+        icon: <img src="images/cluster.png" width={36} alt="Cluster" />,
+        active: autoCluster,
       },
       {
         id: "input",
-        label: showInput ? "Close Input" : "Enter Points",
-        icon: <img src="images/input.png" className="w-6 h-6" />,
+        icon: <img src="images/input.png" width={36} alt="Input" />,
+        active: showInput,
       },
       {
         id: "points",
-        label: closePoints ? "Show Points" : "Hide Points",
-        icon: <img src="images/bulk.png" className="w-6 h-6" />,
+        icon: <img src="images/bulk.png" width={36} alt="Points" />,
+        active: closePoints,
       },
     ],
     [isSidebarOpen, showImporter, autoCluster, showInput, closePoints],
   );
 
-  const handleMenuToggle = () => {
-    setDrawerOpen((v) => !v);
-  };
-
   return (
-    <div className="fixed inset-0 flex items-end justify-center z-[500] pointer-events-none">
-      <motion.button
-        onClick={handleMenuToggle}
-        className="pointer-events-auto mb-10 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white text-lg font-bold bg-emerald-500 hover:bg-emerald-400"
-        whileTap={{ scale: 0.9 }}
-        whileHover={{ scale: 1.05 }}
-      >
-        {drawerOpen ? <X size={20} /> : "☰"}
-      </motion.button>
+    <>
+      {/* BACKDROP */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            onClick={() => setOpen(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-[6px] z-[400]"
+          />
+        )}
+      </AnimatePresence>
 
-      {controls.map((control, i) => {
-        const active = activeControl === control.id;
-
-        return (
-          <motion.button
-            key={control.id}
-            initial={{ opacity: 0, x: 0 }}
-            animate={{
-              opacity: drawerOpen ? 1 : 0,
-              x: drawerOpen ? (i - 2) * 70 : 0,
-              y: drawerOpen ? -120 : 0,
-              scale: drawerOpen ? 1 : 0.7,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 260,
-              damping: 20,
-              delay: i * 0.05,
-            }}
-            onClick={() => {
-              toggleControl(control.id);
-            }}
-            className={`pointer-events-auto absolute w-14 h-14 rounded-full flex items-center justify-center border shadow-md transition-all
-                
-                ${
-                  active
-                    ? "bg-emerald-500 text-white shadow-emerald-400/50"
-                    : darkTheme
-                      ? "bg-neutral-800 text-white"
-                      : "bg-white text-black"
-                }
-
-              `}
+      {/* CONTAINER - Bottom Center */}
+      <div className="fixed bottom-6 left-0 right-0 flex items-center justify-center z-[500] pointer-events-none">
+        <div className="pointer-events-auto">
+          <motion.div
+            layout
+            className="relative flex flex-col items-center justify-center"
           >
-            {control.icon}
-          </motion.button>
-        );
-      })}
+            {/* CONTROL PANEL */}
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                  className={`
+                    grid grid-cols-3 gap-3 p-3 mb-4
+                    rounded-3xl
+                    backdrop-blur-2xl
+                    border
+                    shadow-2xl
+                    ${
+                      darkTheme
+                        ? "bg-white/5 border-white/10"
+                        : "bg-white/70 border-black/10"
+                    }
+                  `}
+                >
+                  {controls.map((c) => (
+                    <motion.button
+                      key={c.id}
+                      onClick={() => toggleControl(c.id)}
+                      whileTap={{ scale: 0.92 }}
+                      whileHover={{ scale: 1.05 }}
+                      className={`
+                        relative w-14 h-14 rounded-2xl
+                        flex items-center justify-center
+                        text-lg
+                        transition-all duration-300
+                        ${
+                          c.active
+                            ? "bg-white/20 shadow-inner"
+                            : darkTheme
+                              ? "bg-white/5 hover:bg-white/10"
+                              : "bg-black/5 hover:bg-black/10"
+                        }
+                      `}
+                    >
+                      {/* subtle glow for active */}
+                      {c.active && (
+                        <motion.div
+                          layoutId="activeGlow"
+                          className="absolute inset-0 rounded-2xl bg-white/10 blur-md"
+                        />
+                      )}
 
-      {/* Hint */}
-      {showHint && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`absolute left-28 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-1 ${
-            darkTheme
-              ? "bg-emerald-600 text-white"
-              : "bg-emerald-400 text-black"
-          }`}
-        >
-          <HelpCircle size={14} />
-          Tap ☰ to open controls
-        </motion.div>
-      )}
-    </div>
+                      <span className="relative z-10">{c.icon}</span>
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* MAIN BUTTON */}
+            <motion.button
+              onClick={() => setOpen(!open)}
+              whileTap={{ scale: 0.92 }}
+              animate={{
+                scale: open ? 1.05 : 1,
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className={`
+                w-16 h-16 rounded-full
+                flex items-center justify-center
+                text-xl
+                backdrop-blur-2xl
+                border
+                shadow-xl
+                transition-all duration-300
+                ${
+                  darkTheme
+                    ? "bg-white/10 border-white/20 text-white"
+                    : "bg-white/80 border-black/10 text-black"
+                }
+              `}
+            >
+              <motion.span
+                animate={{ rotate: open ? 45 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                +
+              </motion.span>
+            </motion.button>
+          </motion.div>
+        </div>
+      </div>
+    </>
   );
 }
