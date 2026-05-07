@@ -18,7 +18,7 @@ type Props = {
 };
 export default function RadiusClusterOverlay({
   points,
-  radius = 500,
+  radius = 5000,
   center,
   onCountChange,
 }: Props) {

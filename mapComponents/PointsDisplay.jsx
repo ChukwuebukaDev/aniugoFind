@@ -462,7 +462,7 @@ export default function PointsDisplay({ zoomToPoint, deletePoint }) {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs opacity-70 text-black font-bold">
+                    <p className="text-xs opacity-720 text-black font-bold">
                       Sites
                     </p>
                     <p className="text-lg font-bold text-pink-900">

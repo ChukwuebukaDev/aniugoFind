@@ -5,7 +5,7 @@ import Supercluster from "supercluster";
 export default function ClusterLayer({
   points,
   renderMarker,
-  clusterRadius = 60,
+  clusterRadius = 5000,
 }) {
   const map = useMap();
   const [clusters, setClusters] = useState([]);
@@ -25,7 +25,7 @@ export default function ClusterLayer({
           coordinates: [p.lng, p.lat],
         },
       })),
-    [points]
+    [points],
   );
 
   const index = useMemo(
@@ -34,7 +34,7 @@ export default function ClusterLayer({
         radius: clusterRadius,
         maxZoom: 18,
       }).load(geoPoints),
-    [geoPoints, clusterRadius]
+    [geoPoints, clusterRadius],
   );
 
   // 🔥 Recompute clusters whenever map moves
@@ -105,7 +105,7 @@ export default function ClusterLayer({
                 click: () => {
                   const expansionZoom = Math.min(
                     index.getClusterExpansionZoom(cluster.id),
-                    18
+                    18,
                   );
                   map.setView([lat, lng], expansionZoom, { animate: true });
                 },

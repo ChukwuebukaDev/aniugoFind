@@ -4,6 +4,7 @@ import { MapContainer, TileLayer } from "react-leaflet";
 import { motion, AnimatePresence } from "framer-motion";
 import RadiusClusterOverlay from "./Cluster/ClusterOverlay";
 import UserLocationMarker from "./Markers/UserLocationMarker";
+import MaintenanceNotice from "../src/MaintenanceNotice";
 import {
   MarkerBounce,
   MarkerLayer,
@@ -196,7 +197,7 @@ export default function CoordinateMap() {
   return (
     <>
       <Spinner loading={loading} />
-
+      <MaintenanceNotice />
       <SavedCoordinatesSidebar
         isOpen={isSidebarOpen}
         onClose={toggleControl}
