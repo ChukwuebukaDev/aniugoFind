@@ -458,7 +458,7 @@ export default function PointsDisplay({ zoomToPoint, deletePoint }) {
                       Total Distance
                     </p>
                     <p className="text-sm font-bold text-pink-900">
-                      {totalDistance ?? "Calculating…"}
+                      {formatDistance(totalDistance) ?? "Calculating…"}
                     </p>
                   </div>
                   <div className="text-right">
