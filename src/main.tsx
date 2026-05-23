@@ -10,6 +10,9 @@ import MaintenancePage from "./FixPage.tsx";
 // const isMaintenanceTime = Date.now() >= maintenanceStartDate.getTime();
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode><App /></StrictMode>,
+  <StrictMode>
+    {" "}
+    <MaintenancePage />
+  </StrictMode>,
 );
 // {isMaintenanceTime ? <MaintenancePage /> : <App />}
