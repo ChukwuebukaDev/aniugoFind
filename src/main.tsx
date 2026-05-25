@@ -11,8 +11,7 @@ import MaintenancePage from "./FixPage.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {" "}
-    <MaintenancePage />
+<App/>
   </StrictMode>,
 );
 // {isMaintenanceTime ? <MaintenancePage /> : <App />}
