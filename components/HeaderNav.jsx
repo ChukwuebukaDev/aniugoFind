@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import extraPointBarToggler from "../hooks/helperHook";
 import ClearAllPointsButton from "../appBtnHandlers/ClearAllPoints";
-
+import SignOut from "../SignOutButton";
 export default function HeaderNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
@@ -135,7 +135,7 @@ export default function HeaderNav() {
           )}
         </div>
       </div>
-
+<SignOut/>
       {/* Mobile Navigation */}
       <div className="md:hidden">
         <button

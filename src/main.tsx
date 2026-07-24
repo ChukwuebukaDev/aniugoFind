@@ -1,15 +1,20 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { ClerkProvider } from "@clerk/clerk-react";
 import "./index.css";
-import App from "./App.tsx";
-import MaintenancePage from "./FixPage.tsx";
+import Home from "./Clerk";
+import MaintenancePage from "./FixPage";
 
-// // Lagos timezone = UTC+1
-// const maintenanceStartDate = new Date("2026-05-21T00:00:00+01:00");
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-// const isMaintenanceTime = Date.now() >= maintenanceStartDate.getTime();
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Clerk Publishable Key");
+}
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode><App /></StrictMode>,
+  <StrictMode>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+    <Home/>
+    </ClerkProvider>
+  </StrictMode>
 );
-// {isMaintenanceTime ? <MaintenancePage /> : <App />}
