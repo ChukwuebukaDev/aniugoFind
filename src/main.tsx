@@ -14,7 +14,7 @@ createRoot(document.getElementById("root")!).render(
       </SignedOut>
 
       <SignedIn>
-        <App />
+        //<App />
       </SignedIn>
     </ClerkProvider>
   </StrictMode>
